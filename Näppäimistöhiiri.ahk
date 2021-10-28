@@ -16,7 +16,7 @@ marginaalit := A_ScreenWidth/10
 yla_ala_vali := A_ScreenHeight/20
 
 siirtyma := A_ScreenWidth/20
-lyhyempi_siirtyma := A_ScreenWidth/95
+lyhyempi_siirtyma := A_ScreenWidth/100
 siirtyman_nopeus := 1
 
 i := 0
