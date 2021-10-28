@@ -11,6 +11,7 @@ CoordMode, Mouse, Screen
 
 X := []
 Y := []
+sarakkeiden_maara := 12
 marginaalit := A_ScreenWidth/10
 yla_ala_vali := A_ScreenHeight/20
 
@@ -19,9 +20,9 @@ lyhyempi_siirtyma := A_ScreenWidth/95
 siirtyman_nopeus := 1
 
 i := 0
-Loop 10
+Loop %sarakkeiden_maara%
 {
-    X[i+1] := i * (A_ScreenWidth - marginaalit) / 9 + marginaalit/2
+    X[i+1] := i * (A_ScreenWidth - marginaalit) / (sarakkeiden_maara-1) + marginaalit/2
     i++
 }
 i := 0
@@ -31,9 +32,9 @@ Loop 4
     i++
 }
 
-HotkeyList := "34567890+´wertyuiopåasdfghjklö<zxcvbnm,."
+HotkeyList := "1 2 3 4 5 6 7 8 9 0 + ´ q w e r t y u i o p å ¨ a s d f g h j k l ö ä ' < z x c v b n m , . - RShift"
 
-Loop, Parse, HotkeyList
+Loop, Parse, HotkeyList, " "
 {
     Hotkey, CapsLock & %A_LoopField%, KoordinaattiLoikkari
 }
@@ -44,9 +45,9 @@ penis:=0
 KoordinaattiLoikkari:
 {
     nappain := SubStr(A_ThisHotkey, 12)
-    nappain_num := InStr(HotkeyList, nappain)
-    x1 := X[ Mod(nappain_num, 10) + (Mod(nappain_num,10)==0)*10 ]
-    y1 := Y[ Floor( (nappain_num - Mod(nappain_num, 10))/10 + 1 - (Mod(nappain_num, 10)==0) ) ]
+    nappain_num := Floor((InStr(HotkeyList, nappain)+1)/2)
+    x1 := X[ Mod(nappain_num, sarakkeiden_maara) + (Mod(nappain_num,sarakkeiden_maara)==0)*sarakkeiden_maara ]
+    y1 := Y[Floor( (nappain_num - Mod(nappain_num, sarakkeiden_maara))/sarakkeiden_maara + 1 - (Mod(nappain_num, sarakkeiden_maara)==0) )]
 
     MouseMove, %x1%, %y1% ,2
 
@@ -58,7 +59,7 @@ CapsLock & Up::
 {
     MouseGetPos, x0, y0
     
-    if GetKeyState("Shift")
+    if GetKeyState("LShift")
     {
         y0 -= lyhyempi_siirtyma
     }
@@ -76,7 +77,7 @@ CapsLock & Down::
 {
     MouseGetPos, x0, y0
     
-    if GetKeyState("Shift")
+    if GetKeyState("LShift")
     {
         y0 += lyhyempi_siirtyma
     }
@@ -94,7 +95,7 @@ CapsLock & Left::
 {
     MouseGetPos, x0, y0
     
-    if GetKeyState("Shift")
+    if GetKeyState("LShift")
     {
         x0 -= lyhyempi_siirtyma
     }
@@ -112,7 +113,7 @@ CapsLock & Right::
 {
     MouseGetPos, x0, y0
     
-    if GetKeyState("Shift")
+    if GetKeyState("LShift")
     {
         x0 += lyhyempi_siirtyma
     }
