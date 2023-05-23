@@ -224,11 +224,9 @@ highlightInner:
 			clipToScan := getClipToAnalyze(direction, alreadyScanned)
 
 			position.rowsMoved += getMovedRows(clipToScan)
+			alreadyScanned += clipToScan.length
 
-			clipLength := StrLen(clipToScan)
-			alreadyScanned += clipLength
-
-			scanClip(clipToScan, clipLength, position, matchCount, direction)
+			scanClip(clipToScan, position, matchCount, direction)
 
 			if (position.found)
 				break
@@ -238,7 +236,7 @@ highlightInner:
 
 	getMovedRows(ByRef clip)
 	{
-		StrReplace(clip, "`n", "`n", newLinesInClip)
+		StrReplace(clip.contents, "`n", "`n", newLinesInClip)
 		return newLinesInClip
 	}
 
@@ -264,20 +262,21 @@ highlightInner:
 			;Clipboard := clipboardStorage ; !!!! HABDLE
 			return ""
 		}
-		return clip
+		return { contents: clip, length: StrLen(clip) }
 	}
 
-	scanClip(ByRef clipToScan, clipLength, ByRef position, ByRef matches, direction)
+	scanClip(ByRef clipToScan, ByRef position, ByRef matches, direction)
 	{
 		global lChar, rChar
 		char := ""
+		clipLength := clipToScan.length
 		Loop %clipLength%
 		{
 			; Get char
 			if (direction == "Left")
-				char := SubStr(clipToScan, 1 - A_Index, 1)
+				char := SubStr(clipToScan.contents, 1 - A_Index, 1)
 			else
-				char := SubStr(clipToScan, A_Index, 1)
+				char := SubStr(clipToScan.contents, A_Index, 1)
 
 			if (char == lChar)
 				matches.l++
