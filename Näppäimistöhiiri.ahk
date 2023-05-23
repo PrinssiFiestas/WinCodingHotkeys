@@ -1,13 +1,13 @@
 ﻿#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 ; #Warn  ; Enable warnings to assist with detecting common errors.
 ; SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
-
+#Persistent
 SetKeyDelay 100
 #SingleInstance, Force
 
 CoordMode, Mouse, Screen
 
-
+; Note that in Windows language settings you have set shift key to the key that turns caps off then this script wont work. I'll add an option for it here some day...
 
 X := []
 Y := []
@@ -39,9 +39,8 @@ Loop, Parse, HotkeyList, " "
     Hotkey, CapsLock & %A_LoopField%, KoordinaattiLoikkari
 }
 
-Return
+return
 
-penis:=0
 KoordinaattiLoikkari:
 {
     nappain := SubStr(A_ThisHotkey, 12)
@@ -50,92 +49,81 @@ KoordinaattiLoikkari:
     y1 := Y[Floor( (nappain_num - Mod(nappain_num, sarakkeiden_maara))/sarakkeiden_maara + 1 - (Mod(nappain_num, sarakkeiden_maara)==0) )]
 
     MouseMove, %x1%, %y1% ,2
-
-    Return
+    return
 }
-
 
 CapsLock & Up::
 {
     MouseGetPos, x0, y0
-    
+
     if GetKeyState("LShift")
     {
         y0 -= lyhyempi_siirtyma
     }
-    Else
+    else
     {
         y0 -= siirtyma
     }
     MouseMove, %x0%, %y0%, %siirtyman_nopeus%
-
-    Return
+    return
 }
-
 
 CapsLock & Down::
 {
     MouseGetPos, x0, y0
-    
+
     if GetKeyState("LShift")
     {
         y0 += lyhyempi_siirtyma
     }
-    Else
+    else
     {
         y0 += siirtyma
     }
     MouseMove, %x0%, %y0%, %siirtyman_nopeus%
-
-    Return
+    return
 }
-
 
 CapsLock & Left::
 {
     MouseGetPos, x0, y0
-    
+
     if GetKeyState("LShift")
     {
         x0 -= lyhyempi_siirtyma
     }
-    Else
+    else
     {
         x0 -= siirtyma
     }
     MouseMove, %x0%, %y0%, %siirtyman_nopeus%
-
-    Return
+    return
 }
-
 
 CapsLock & Right::
 {
     MouseGetPos, x0, y0
-    
+
     if GetKeyState("LShift")
     {
         x0 += lyhyempi_siirtyma
     }
-    Else
+    else
     {
         x0 += siirtyma
     }
     MouseMove, %x0%, %y0%, %siirtyman_nopeus%
-
-    Return
+    return
 }
-
 
 CapsLock & Enter::
 {
     Click
-    Return
+    return
 }
-
 
 CapsLock & BackSpace::
 {
     Click, R
-    Return
+    return
 }
