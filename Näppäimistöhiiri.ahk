@@ -127,3 +127,9 @@ CapsLock & BackSpace::
     Click, R
     return
 }
+
+CapsLock & Space::
+{
+    MouseGetPos,,, hwnd
+    WinActivate, ahk_id %hwnd%
+}
