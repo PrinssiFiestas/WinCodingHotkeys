@@ -185,8 +185,7 @@ highlightInner:
 
 	findMatching(direction)
 	{
-		;global alreadyScanned ; why is this global??
-		global row := 0 ; same with this. why global?
+		;global row := 0 ; same with this. why global?
 		global lCount := 0
 		global rCount := 0
 		alreadyScanned := 0
