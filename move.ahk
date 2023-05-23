@@ -216,8 +216,7 @@ highlightInner:
 
 	findMatching(direction)
 	{
-		global lCount := 0
-		global rCount := 0
+		matchCount := { l: 0, r: 0 }
 		alreadyScanned := 0
 		position := new Position
 		Loop
@@ -229,7 +228,7 @@ highlightInner:
 			clipLength := StrLen(clipToScan)
 			alreadyScanned += clipLength
 
-			scanClip(clipToScan, clipLength, position, direction)
+			scanClip(clipToScan, clipLength, position, matchCount, direction)
 
 			if (position.found)
 				break
@@ -268,10 +267,9 @@ highlightInner:
 		return clip
 	}
 
-	scanClip(ByRef clipToScan, clipLength, ByRef position, direction)
+	scanClip(ByRef clipToScan, clipLength, ByRef position, ByRef matches, direction)
 	{
 		global lChar, rChar
-		global lCount, rCount
 		char := ""
 		Loop %clipLength%
 		{
@@ -282,9 +280,9 @@ highlightInner:
 				char := SubStr(clipToScan, A_Index, 1)
 
 			if (char == lChar)
-				lCount++
+				matches.l++
 			if (char == rChar)
-				rCount++
+				matches.r++
 
 			; ----------------------------------------
 
@@ -295,12 +293,12 @@ highlightInner:
 
 			; --------------------------------------
 
-			if (checkCounts(lCount, rCount, direction) == "LeftMatch" && direction == "Left")
+			if (checkCounts(matches, direction) == "LeftMatch" && direction == "Left")
 			{
 				position.found := true
 				return
 			}
-			else if (checkCounts(lCount, rCount, direction) == "RightMatch" && direction == "Right")
+			else if (checkCounts(matches, direction) == "RightMatch" && direction == "Right")
 			{
 				position.found := true
 				return
@@ -310,12 +308,12 @@ highlightInner:
 		return
 	}
 
-	checkCounts(lCount, rCount, direction)
+	checkCounts(counts, direction)
 	{
 		global lChar, rChar
-		if (direction == "Left" && (lCount > rCount || (rChar == lChar && lCount > 0)))
+		if (direction == "Left" && (counts.l > counts.r || (rChar == lChar && counts.l > 0)))
 			return "LeftMatch"
-		else if (direction == "Right" && (rCount > lCount || (rChar == lChar && rCount > 0)))
+		else if (direction == "Right" && (counts.r > counts.l || (rChar == lChar && counts.r > 0)))
 			return "RightMatch"
 		else
 			return ""
