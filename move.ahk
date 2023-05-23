@@ -127,8 +127,39 @@ highlightInner:
 
 	; -------------------- TEMP SEPARATOR: REMOVE AFTER REFACTOR
 
-	lPosition := { row: 0, index: 0, rowsMoved: 0, found: false }
-	rPosition := { row: 0, index: 0, rowsMoved: 0, found: false }
+	class Position
+	{
+		row := 0
+		index := 0
+		rowsMoved := 0
+		found := false
+
+		updatePosition(char, mode)
+		{
+			if (char != "`r")
+				this.index++
+			if (char == "`n")
+			{
+				this.row++
+				if (mode == "resetIndexOnNewLine")
+					this.index := 0
+			}
+			return
+		}
+
+		debugMsg()
+		{
+			_row := this.row
+			_index := this.index
+			_rowsMoved := this.rowsMoved
+			_found := this.found
+			Sleep 100
+			MsgBox, row: %_row%`nindex: %_index%`nrowsMoved: %_rowsMoved%`nfound: %_found%
+		}
+	}
+
+	lPosition := new Position
+	rPosition := new Position
 
 	lPosition := findMatching("Left")
 
@@ -185,14 +216,10 @@ highlightInner:
 
 	findMatching(direction)
 	{
-		;global alreadyScanned ; why is this global??
-		global row := 0 ; same with this. why global?
 		global lCount := 0
 		global rCount := 0
 		alreadyScanned := 0
-		position := { row: 0, index: 0, rowsMoved: 0, found: false }
-		row := 0
-		index := 0
+		position := new Position
 		Loop
 		{
 			clipToScan := getClipToAnalyze(direction, alreadyScanned)
@@ -202,11 +229,9 @@ highlightInner:
 			clipLength := StrLen(clipToScan)
 			alreadyScanned += clipLength
 
-			foundMatch := scanClip(clipToScan, clipLength, row, index, direction)
-			position.index := index
-			position.row := row
+			scanClip(clipToScan, clipLength, position, direction)
 
-			if (foundMatch) ; position.found or something
+			if (position.found)
 				break
 		}
 		return position
@@ -243,12 +268,11 @@ highlightInner:
 		return clip
 	}
 
-	scanClip(ByRef clipToScan, clipLength, ByRef localRow, ByRef index, direction)
+	scanClip(ByRef clipToScan, clipLength, ByRef position, direction)
 	{
-		global row
 		global lChar, rChar
 		global lCount, rCount
-		global char := ""
+		char := ""
 		Loop %clipLength%
 		{
 			; Get char
@@ -265,24 +289,25 @@ highlightInner:
 			; ----------------------------------------
 
 			if (direction == "Left")
-				updatePosition(index, row, "resetIndexOnNewLine") ; row maybe not needed?
+				position.updatePosition(char, "resetIndexOnNewLine")
 			else
-				updatePosition(index, row, "noReset") ; cahnge odertgfd
+				position.updatePosition(char, "noReset")
 
 			; --------------------------------------
 
 			if (checkCounts(lCount, rCount, direction) == "LeftMatch" && direction == "Left")
 			{
-				localRow := row
-				return true
+				position.found := true
+				return
 			}
 			else if (checkCounts(lCount, rCount, direction) == "RightMatch" && direction == "Right")
 			{
-				localRow := row
-				return true
+				position.found := true
+				return
 			}
 		}
-		return false
+		position.found := false
+		return
 	}
 
 	checkCounts(lCount, rCount, direction)
@@ -294,19 +319,5 @@ highlightInner:
 			return "RightMatch"
 		else
 			return ""
-	}
-
-	updatePosition(ByRef column, ByRef row, mode)
-	{
-		global char
-		if (char != "`r")
-			column++
-		if (char == "`n")
-		{
-			row++
-			if (mode == "resetIndexOnNewLine")
-				column := 0
-		}
-		return
 	}
 }
