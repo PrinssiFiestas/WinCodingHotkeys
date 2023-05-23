@@ -41,7 +41,6 @@ return ; -----------------------------------------------------------------------
 #SingleInstance force
 #Persistent
 #Warn
-SetKeyDelay 0
 
 repeatArrows:
 {
@@ -54,11 +53,11 @@ repeatArrows:
 	Loop %number%
 	{
 		if (GetKeyState("Ctrl"))
-			SendEvent ^{%arrow%}
+			SendInput ^{%arrow%}
 		else if (GetKeyState("Shift"))
-			SendEvent +{%arrow%}
+			SendInput +{%arrow%}
 		else
-			SendEvent {%arrow%}
+			SendInput {%arrow%}
 	}
 	return
 }
@@ -72,9 +71,9 @@ findCharInLine:
 	jump      := direction == "Left" ? "Home" : "End"
 	jumpBack  := direction == "Left" ? "Right" : "Left"
 
-	SendEvent +{%jump%} ; highligh line from cursor position to get it's contents
+	SendInput +{%jump%} ; highligh line from cursor position to get it's contents
 	Sleep 10 ; move the time to global setting
-	SendEvent ^c
+	SendInput ^c
 	ClipWait 0
 	if (ErrorLevel == 1)
 	{
@@ -83,7 +82,7 @@ findCharInLine:
 		return
 	}
 	lineContents := Clipboard
-	SendEvent {%jumpBack%} ; get back to original cursor position
+	SendInput {%jumpBack%} ; get back to original cursor position
 
 	Input char, L1
 	charPosition := InStr(lineContents, char, true, direction == "Right" ? 1 : -1)
@@ -95,10 +94,10 @@ findCharInLine:
 	if (direction == "Left")
 		charPosition := StrLen(lineContents) - charPosition + 1
 
-	SendEvent {%jumpBack%} ; revert initial arrow press
+	SendInput {%jumpBack%} ; revert initial arrow press
 	; Highlight to found character
 	Loop %charPosition%
-		SendEvent +{%direction%}
+		SendInput +{%direction%}
 
 	Clipboard := clipboardStorage
 	return
@@ -166,17 +165,17 @@ highlightInner:
 	; Get back to starting position
 	while (lPosition.rowsMoved > 0)
 	{
-		SendEvent {Down}
+		SendInput {Down}
 		lPosition.rowsMoved--
 	}
 
 	rPosition := findMatching("Right")
 
 	; Go to rChar
-	SendEvent {Left}
+	SendInput {Left}
 	rIndex := rPosition.index
 	Loop %rIndex%
-		SendEvent {Right}
+		SendInput {Right}
 
 	; Highlight from rChar to lChar
 	rowsToLeftChar := lPosition.row + rPosition.row
@@ -185,28 +184,28 @@ highlightInner:
 	{
 		while (rowsToLeftChar > 0)
 		{
-			SendEvent +{Up}
+			SendInput +{Up}
 			rowsToLeftChar--
 		}
-		SendEvent +{End}
+		SendInput +{End}
 		Loop %lIndex%
-			SendEvent +{Left}
+			SendInput +{Left}
 	}
 	else ; rChar is at the same line as lChar
 	{
 		total := rIndex + lIndex
 		Loop %total%
-			SendEvent +{Left}
+			SendInput +{Left}
 	}
 
 	if (InStr(A_ThisHotkey, "Delete"))
 	{
-		SendEvent {Delete}
+		SendInput {Delete}
 	}
 	else
 	{
 		; Revert initial press when activated hotkey ; MOVE TO RESETG
-		SendEvent {Insert}
+		SendInput {Insert}
 	}
 
 	Clipboard := clipboardStorage
@@ -214,7 +213,7 @@ highlightInner:
 
 	; ----------------- Helpers ----------------------
 
-	findMatching(direction)
+	findMatching(ByRef direction)
 	{
 		matchCount := { l: 0, r: 0 }
 		alreadyScanned := 0
@@ -240,7 +239,7 @@ highlightInner:
 		return newLinesInClip
 	}
 
-	getClipToAnalyze(direction, alreadyScanned)
+	getClipToAnalyze(ByRef direction, alreadyScanned)
 	{
 		global rowsToAnalyze
 		global inputtedChar
@@ -248,9 +247,9 @@ highlightInner:
 		Clipboard := "" ; this needs to be handled better
 		verticalDirection := direction == "Left" ? "Up" : "Down"
 		Loop %rowsToAnalyze%
-			SendEvent +{%verticalDirection%}
+			SendInput +{%verticalDirection%}
 		Sleep 10
-		SendEvent ^c
+		SendInput ^c
 		ClipWait 0
 		if (direction == "Left")
 			clip := SubStr(Clipboard, 1, StrLen(Clipboard) - alreadyScanned)
@@ -265,7 +264,7 @@ highlightInner:
 		return { contents: clip, length: StrLen(clip) }
 	}
 
-	scanClip(ByRef clipToScan, ByRef position, ByRef matches, direction)
+	scanClip(ByRef clipToScan, ByRef position, ByRef matches, ByRef direction)
 	{
 		global lChar, rChar
 		char := ""
@@ -307,7 +306,7 @@ highlightInner:
 		return
 	}
 
-	checkCounts(counts, direction)
+	checkCounts(counts, ByRef direction)
 	{
 		global lChar, rChar
 		if (direction == "Left" && (counts.l > counts.r || (rChar == lChar && counts.l > 0)))
