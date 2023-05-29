@@ -122,9 +122,7 @@ highlightInner:
 	lChar := SubStr(pairs, charIndex - !Mod(charIndex, 2), 1)
 	rChar := SubStr(pairs, charIndex +  Mod(charIndex, 2), 1)
 
-	clipboardStorage := Clipboard ; AGAIN HANDLE
-
-	; -------------------- TEMP SEPARATOR: REMOVE AFTER REFACTOR
+	clipboardStorage := Clipboard
 
 	class Position
 	{
@@ -132,31 +130,7 @@ highlightInner:
 		index := 0
 		rowsMoved := 0
 		found := false
-
-		updatePosition(char, mode)
-		{
-			if (char != "`r")
-				this.index++
-			if (char == "`n")
-			{
-				this.row++
-				if (mode == "resetIndexOnNewLine")
-					this.index := 0
-			}
-			return
-		}
-
-		debugMsg()
-		{
-			_row := this.row
-			_index := this.index
-			_rowsMoved := this.rowsMoved
-			_found := this.found
-			Sleep 100
-			MsgBox, row: %_row%`nindex: %_index%`nrowsMoved: %_rowsMoved%`nfound: %_found%
-		}
 	}
-
 	lPosition := new Position
 	rPosition := new Position
 
@@ -170,7 +144,8 @@ highlightInner:
 	; Get back to starting position
 	SendInput {Right}
 
-	if (lPosition.row == 0) ; we need cursor position
+	; Get cursor position for the case that lChar is on the same line with rChar
+	if (lPosition.row == 0)
 	{
 		Clipboard := ""
 		SendInput +{End}
@@ -194,10 +169,15 @@ highlightInner:
 		goto highlightInnerFinish
 	}
 
-	; Go to rChar ; Make this faster by checking if its faster to go from right to left
-	SendInput {Left}
-	rIndex := rPosition.index
-	Loop %rIndex%
+	; Go to rChar
+	SendInput {Left} ; Get back to starting position
+	if (rPosition.row > 0)
+	{
+		SendInput {End}{Right} ; Go to column 0 on next line
+		Loop % rPosition.row - 1
+			SendInput {Down}
+	}
+	Loop % rPosition.index
 		SendInput {Right}
 
 	; Highlight from rChar to lChar
@@ -216,7 +196,7 @@ highlightInner:
 	}
 	else ; rChar is at the same line as lChar
 	{
-		Loop % rIndex + lOffset
+		Loop % rPosition.index + lOffset
 			SendInput +{Left}
 	}
 
@@ -317,10 +297,13 @@ highlightInnerFinish:
 
 			; ----------------------------------------
 
-			if (direction == "Left")
-				position.updatePosition(char, "resetIndexOnNewLine")
-			else
-				position.updatePosition(char, "noReset")
+			if (char != "`r")
+				position.index++
+			if (char == "`n")
+			{
+				position.row++
+				position.index := 0
+			}
 
 			; --------------------------------------
 
