@@ -42,7 +42,6 @@ return ; -----------------------------------------------------------------------
 #Persistent
 #Warn
 
-
 repeatArrows:
 {
 	hotkeyElements := StrSplit(A_ThisHotkey, " & ")
@@ -169,6 +168,20 @@ highlightInner:
 		SendInput {Down}
 		lPosition.rowsMoved--
 	}
+	;~ if (lPosition.row == 0) ; we need cursor position
+	;~ {
+		;~ Clipboard := ""
+		;~ SendInput +{End}
+		;~ Sleep 10
+		;~ SendInput ^c
+		;~ ClipWait 0.1
+		;~ if (ErrorLevel == 0)
+		;~ {
+			;~ lOffset := lPosition.index
+			;~ lPosition.index += StrLen(Clipboard)
+			;~ SendInput {Left} ; get back
+		;~ }
+	;~ }
 
 	rPosition := findMatching("Right")
 
@@ -194,8 +207,9 @@ highlightInner:
 	}
 	else ; rChar is at the same line as lChar
 	{
-		total := rIndex + lIndex
-		Loop %total%
+		;~ total := rIndex + lIndex
+		;~ Loop %total%
+		Loop % rIndex + lOffset
 			SendInput +{Left}
 	}
 
