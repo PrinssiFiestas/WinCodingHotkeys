@@ -1,6 +1,11 @@
-﻿; documentation and stuff
+﻿; ---------------------------------------------------------------------------------------
+;
+;		GLOBAL SETTINGS
+;
+; ---------------------------------------------------------------------------------------
 
 global rowsToAnalyze := 5
+global highlightWaitTime := 1
 
 ; ---------------------------------------------------------------------------------------
 ;
@@ -75,7 +80,7 @@ findCharInLine:
 	jumpBack  := direction == "Left" ? "Right" : "Left"
 
 	SendInput +{%jump%} ; highligh line from cursor position to get it's contents
-	Sleep 10 ; move the time to global setting
+	Sleep % highlightWaitTime
 	SendInput ^c
 	ClipWait 0
 	if (ErrorLevel == 1)
@@ -150,7 +155,7 @@ highlightInner:
 	if ( ! lPosition.found)
 	{
 		MsgBox Couldn't find valid %lChar%!
-		;goto highlightInnerFinish
+		goto highlightInnerFinish
 	}
 
 	; Get back to starting position
@@ -162,7 +167,7 @@ highlightInner:
 	if ( ! rPosition.found)
 	{
 		MsgBox Couldn't find matching %rChar%!
-		;goto highlightInnerFinish
+		goto highlightInnerFinish
 	}
 
 	; Get back to starting position
@@ -188,7 +193,7 @@ highlightInner:
 	{
 		Clipboard := ""
 		SendInput +{End}
-		Sleep 10
+		Sleep % highlightWaitTime
 		SendInput ^c
 		ClipWait 0.1
 		if (ErrorLevel == 0)
@@ -267,7 +272,7 @@ highlightInnerFinish:
 		verticalDirection := direction == "Left" ? "Up" : "Down"
 		Loop %rowsToAnalyze%
 			SendInput +{%verticalDirection%}
-		Sleep 10
+		Sleep % highlightWaitTime
 		SendInput ^c
 		ClipWait 0.1
 		if (ErrorLevel == 1 && alreadyScanned == 0) ; we're on 1st/last line and using Notepad.exe
@@ -277,8 +282,9 @@ highlightInnerFinish:
 				SendInput +{Home}
 			else
 				SendInput +{End}
-			Sleep 10
+			Sleep % highlightWaitTime
 			SendInput ^c
+			ClipWait 0.1
 			clip := Clipboard
 		}
 		else if (direction == "Left")

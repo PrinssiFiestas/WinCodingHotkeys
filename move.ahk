@@ -1,6 +1,12 @@
-﻿; documentation and stuff
+﻿; ---------------------------------------------------------------------------------------
+;
+;		GLOBAL SETTINGS
+;
+; ---------------------------------------------------------------------------------------
 
 global rowsToAnalyze := 5
+global highlightWaitTime := 1
+global clipWaitTime := 0.01
 
 ; ---------------------------------------------------------------------------------------
 ;
@@ -75,9 +81,9 @@ findCharInLine:
 	jumpBack  := direction == "Left" ? "Right" : "Left"
 
 	SendInput +{%jump%} ; highligh line from cursor position to get it's contents
-	Sleep 10 ; move the time to global setting
+	Sleep % highlightWaitTime
 	SendInput ^c
-	ClipWait 0
+	ClipWait % clipWaitTime
 	if (ErrorLevel == 1)
 	{
 		MsgBox End of line or failure reading line!
@@ -188,9 +194,9 @@ highlightInner:
 	{
 		Clipboard := ""
 		SendInput +{End}
-		Sleep 10
+		Sleep % highlightWaitTime
 		SendInput ^c
-		ClipWait 0.1
+		ClipWait % clipWaitTime
 		if (ErrorLevel == 0)
 		{
 			lOffset := lPosition.column
@@ -267,9 +273,9 @@ highlightInnerFinish:
 		verticalDirection := direction == "Left" ? "Up" : "Down"
 		Loop %rowsToAnalyze%
 			SendInput +{%verticalDirection%}
-		Sleep 10
+		Sleep % highlightWaitTime
 		SendInput ^c
-		ClipWait 0.1
+		ClipWait % clipWaitTime
 		if (ErrorLevel == 1 && alreadyScanned == 0) ; we're on 1st/last line and using Notepad.exe
 		{
 			; Try scanning the current line
@@ -277,9 +283,9 @@ highlightInnerFinish:
 				SendInput +{Home}
 			else
 				SendInput +{End}
-			Sleep 10
+			Sleep % highlightWaitTime
 			SendInput ^c
-			ClipWait 0.1
+			ClipWait % clipWaitTime
 			clip := Clipboard
 		}
 		else if (direction == "Left")
