@@ -1,4 +1,4 @@
-does it work here? { in braces } other garbage text	 OK
+does it work here? { in braaaces } other garbage text	 OK
 {
 	faadddf OK
 }
@@ -79,7 +79,7 @@ if
 	if
 	{
 		fdsfdia
-	qwer rewq rewqr ewqewr we q weqrwer qweqr weqr qwer  } re{}wqr 	OK
+	qwer rewq rewqr ewqewr we q weqrwer qweqr weq re{}wqr 	OK
 }
 
 dummy text

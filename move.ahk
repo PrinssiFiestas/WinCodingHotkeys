@@ -161,6 +161,11 @@ highlightInner:
 	rPosition := new Position
 
 	lPosition := findMatching("Left")
+	if ( ! lPosition.found)
+	{
+		MsgBox Couldn't find valid %lChar%!
+		goto highlightInnerFinish
+	}
 
 	; Get back to starting position
 	SendInput {Right}
@@ -181,6 +186,13 @@ highlightInner:
 	}
 
 	rPosition := findMatching("Right")
+
+	; There's a bug somewhere which makes findMatching() to always find rChar at the end of file
+	if ( ! rPosition.found)
+	{
+		MsgBox Couldn't find matching %rChar%!
+		goto highlightInnerFinish
+	}
 
 	; Go to rChar ; Make this faster by checking if its faster to go from right to left
 	SendInput {Left}
@@ -212,11 +224,13 @@ highlightInner:
 	{
 		SendInput {Delete}
 	}
-	else
+	else ; MOVE BELOW
 	{
 		; Revert initial press when activated hotkey ; MOVE TO RESETG
 		SendInput {Insert}
 	}
+
+highlightInnerFinish:
 
 	Clipboard := clipboardStorage
 	return
@@ -231,6 +245,8 @@ highlightInner:
 		Loop
 		{
 			clipToScan := getClipToAnalyze(direction, alreadyScanned)
+			if (clipToScan.contents == "")
+				break ; return with position.found = false
 
 			position.rowsMoved += getMovedRows(clipToScan)
 			alreadyScanned += clipToScan.length
@@ -254,7 +270,8 @@ highlightInner:
 		global rowsToAnalyze
 		global inputtedChar
 		global verticalDirection
-		Clipboard := "" ; this needs to be handled better
+		Clipboard := ""
+		clip := ""
 		verticalDirection := direction == "Left" ? "Up" : "Down"
 		Loop %rowsToAnalyze%
 			SendInput +{%verticalDirection%}
@@ -277,12 +294,6 @@ highlightInner:
 		else
 			clip := SubStr(Clipboard, alreadyScanned + 1)
 
-		if (clip == "") ; Move error handling to caller
-		{
-			MsgBox Couldn't find matching `'%inputtedChar%`'
-			;Clipboard := clipboardStorage ; !!!! HABDLE
-			return "" ; this was wrong in the first place!
-		}
 		return { contents: clip, length: StrLen(clip) }
 	}
 
