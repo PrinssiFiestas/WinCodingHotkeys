@@ -62,6 +62,9 @@ repeatArrows:
 	return
 }
 
+; ---------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------------------
+
 findCharInLine:
 {
 	clipboardStorage := Clipboard
@@ -103,6 +106,9 @@ findCharInLine:
 	return
 }
 
+; ---------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------------------
+
 highlightInner:
 {
 	lChar := ""
@@ -121,6 +127,8 @@ highlightInner:
 	rChar := SubStr(pairs, charIndex +  Mod(charIndex, 2), 1)
 
 	clipboardStorage := Clipboard
+
+	; --------------------------------------------
 
 	class Position
 	{
@@ -224,7 +232,8 @@ highlightInnerFinish:
 	Clipboard := clipboardStorage
 	return
 
-	; ----------------- Helpers ----------------------
+	; -------------------------------------------------
+	;	Helpers
 
 	findMatching(ByRef direction)
 	{

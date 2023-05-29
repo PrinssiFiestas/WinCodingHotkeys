@@ -148,22 +148,6 @@ highlightInner:
 	; Get back to starting position
 	SendInput {Right}
 
-	;~ ; Get cursor position for the case that lChar is on the same line with rChar
-	;~ if (lPosition.row == 0)
-	;~ {
-		;~ Clipboard := ""
-		;~ SendInput +{End}
-		;~ Sleep 10
-		;~ SendInput ^c
-		;~ ClipWait 0.1
-		;~ if (ErrorLevel == 0)
-		;~ {
-			;~ lOffset := lPosition.column
-			;~ lPosition.column += StrLen(Clipboard)
-			;~ SendInput {Left} ; get back
-		;~ }
-	;~ }
-
 	rPosition := findMatching("Right")
 
 	; There's a bug somewhere which makes findMatching() to always find rChar at the end of file
@@ -173,7 +157,8 @@ highlightInner:
 		goto highlightInnerFinish
 	}
 
-	SendInput {Left} ; Get back to starting position
+	; Get back to starting position
+	SendInput {Left}
 
 	; ----------------------------------------------------
 	;	Special cases
@@ -206,16 +191,12 @@ highlightInner:
 		}
 	}
 
-	;~ ; The reason for using columns relative to cursor and relative to line start/end
-	;~ ; separately rather than just sticking with relative to line end is to avoid redundant
-	;~ ; scans and thus time.
-
 	; ----------------------------------------------------
 
 	; Go to rChar
 	if (rPosition.row > 0)
 	{
-		SendInput {End}{Right} ; Go to column 0 on next line
+		SendInput {End}{Right}
 		Loop % rPosition.row - 1
 			SendInput {Down}
 	}
