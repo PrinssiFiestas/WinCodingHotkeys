@@ -103,7 +103,7 @@ findCharInLine:
 	return
 }
 
-; remember INSERT at errors!
+; remember INSERT at errors! also fix infinite loop on errors!
 ; maybe with reset callback or something
 highlightInner:
 {
@@ -163,11 +163,8 @@ highlightInner:
 	lPosition := findMatching("Left")
 
 	; Get back to starting position
-	while (lPosition.rowsMoved > 0)
-	{
-		SendInput {Down}
-		lPosition.rowsMoved--
-	}
+	SendInput {Right}
+
 	if (lPosition.row == 0) ; we need cursor position
 	{
 		Clipboard := ""

@@ -163,25 +163,22 @@ highlightInner:
 	lPosition := findMatching("Left")
 
 	; Get back to starting position
-	while (lPosition.rowsMoved > 0)
+	SendInput {Right}
+
+	if (lPosition.row == 0) ; we need cursor position
 	{
-		SendInput {Down}
-		lPosition.rowsMoved--
+		Clipboard := ""
+		SendInput +{End}
+		Sleep 10
+		SendInput ^c
+		ClipWait 0.1
+		if (ErrorLevel == 0)
+		{
+			lOffset := lPosition.index
+			lPosition.index += StrLen(Clipboard)
+			SendInput {Left} ; get back
+		}
 	}
-	;~ if (lPosition.row == 0) ; we need cursor position
-	;~ {
-		;~ Clipboard := ""
-		;~ SendInput +{End}
-		;~ Sleep 10
-		;~ SendInput ^c
-		;~ ClipWait 0.1
-		;~ if (ErrorLevel == 0)
-		;~ {
-			;~ lOffset := lPosition.index
-			;~ lPosition.index += StrLen(Clipboard)
-			;~ SendInput {Left} ; get back
-		;~ }
-	;~ }
 
 	rPosition := findMatching("Right")
 
