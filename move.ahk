@@ -252,6 +252,8 @@ highlightInnerFinish:
 			if (position.found)
 				break
 		}
+		if (InStr(A_ThisHotkey, " i "))
+			position.column--
 		return position
 	}
 
