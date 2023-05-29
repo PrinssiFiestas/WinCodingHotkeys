@@ -103,8 +103,6 @@ findCharInLine:
 	return
 }
 
-; remember INSERT at errors! also fix infinite loop on errors!
-; maybe with reset callback or something
 highlightInner:
 {
 	lChar := ""
@@ -115,7 +113,7 @@ highlightInner:
 	while (GetKeyState("Ctrl") || GetKeyState("Alt") || GetKeyState("AltGr") || GetKeyState("Shift"))
 		Sleep 1
 
-	pairs := "()[]{}<>""""''"
+	pairs := "()[]{}<>""""''" ; move to settings and add parity checking
 	charIndex := InStr(pairs, inputtedChar)
 	if (charIndex == 0)
 		return
@@ -124,11 +122,10 @@ highlightInner:
 
 	clipboardStorage := Clipboard
 
-	class Position
+	class Position ; relative to cursor
 	{
 		row := 0
-		index := 0
-		rowsMoved := 0
+		column := 0
 		found := false
 	}
 	lPosition := new Position
@@ -154,8 +151,8 @@ highlightInner:
 		ClipWait 0.1
 		if (ErrorLevel == 0)
 		{
-			lOffset := lPosition.index
-			lPosition.index += StrLen(Clipboard)
+			lOffset := lPosition.column
+			lPosition.column += StrLen(Clipboard)
 			SendInput {Left} ; get back
 		}
 	}
@@ -177,12 +174,12 @@ highlightInner:
 		Loop % rPosition.row - 1
 			SendInput {Down}
 	}
-	Loop % rPosition.index
+	Loop % rPosition.column
 		SendInput {Right}
 
 	; Highlight from rChar to lChar
 	rowsToLeftChar := lPosition.row + rPosition.row
-	lIndex := lPosition.index
+	lColumn := lPosition.column
 	if (rowsToLeftChar > 0)
 	{
 		while (rowsToLeftChar > 0)
@@ -191,12 +188,12 @@ highlightInner:
 			rowsToLeftChar--
 		}
 		SendInput +{End}
-		Loop %lIndex%
+		Loop %lColumn%
 			SendInput +{Left}
 	}
 	else ; rChar is at the same line as lChar
 	{
-		Loop % rPosition.index + lOffset
+		Loop % rPosition.column + lOffset
 			SendInput +{Left}
 	}
 
@@ -222,8 +219,6 @@ highlightInnerFinish:
 			clipToScan := getClipToAnalyze(direction, alreadyScanned)
 			if (clipToScan.contents == "")
 				break ; return with position.found = false
-
-			position.rowsMoved += getMovedRows(clipToScan)
 			alreadyScanned += clipToScan.length
 
 			scanClip(clipToScan, position, matchCount, direction)
@@ -232,12 +227,6 @@ highlightInnerFinish:
 				break
 		}
 		return position
-	}
-
-	getMovedRows(ByRef clip)
-	{
-		StrReplace(clip.contents, "`n", "`n", newLinesInClip)
-		return newLinesInClip
 	}
 
 	getClipToAnalyze(ByRef direction, alreadyScanned)
@@ -293,11 +282,11 @@ highlightInnerFinish:
 			; ----------------------------------------
 
 			if (char != "`r")
-				position.index++
+				position.column++
 			if (char == "`n")
 			{
 				position.row++
-				position.index := 0
+				position.column := 0
 			}
 
 			; --------------------------------------

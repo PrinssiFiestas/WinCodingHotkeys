@@ -103,8 +103,6 @@ findCharInLine:
 	return
 }
 
-; remember INSERT at errors! also fix infinite loop on errors!
-; maybe with reset callback or something
 highlightInner:
 {
 	lChar := ""
@@ -115,7 +113,7 @@ highlightInner:
 	while (GetKeyState("Ctrl") || GetKeyState("Alt") || GetKeyState("AltGr") || GetKeyState("Shift"))
 		Sleep 1
 
-	pairs := "()[]{}<>""""''"
+	pairs := "()[]{}<>""""''" ; move to settings and add parity checking
 	charIndex := InStr(pairs, inputtedChar)
 	if (charIndex == 0)
 		return
@@ -201,17 +199,12 @@ highlightInner:
 	}
 
 	if (InStr(A_ThisHotkey, "Delete"))
-	{
 		SendInput {Delete}
-	}
-	else ; MOVE BELOW
-	{
-		; Revert initial press when activated hotkey ; MOVE TO RESETG
-		SendInput {Insert}
-	}
 
 highlightInnerFinish:
 
+	if (InStr(A_ThisHotkey, "Insert"))
+		SendInput {Insert}
 	Clipboard := clipboardStorage
 	return
 
@@ -228,7 +221,7 @@ highlightInnerFinish:
 			if (clipToScan.contents == "")
 				break ; return with position.found = false
 
-			position.rowsMoved += getMovedRows(clipToScan)
+			;position.rowsMoved += getMovedRows(clipToScan) ; <------------------
 			alreadyScanned += clipToScan.length
 
 			scanClip(clipToScan, position, matchCount, direction)
@@ -239,11 +232,11 @@ highlightInnerFinish:
 		return position
 	}
 
-	getMovedRows(ByRef clip)
-	{
-		StrReplace(clip.contents, "`n", "`n", newLinesInClip)
-		return newLinesInClip
-	}
+	;~ getMovedRows(ByRef clip)
+	;~ {
+		;~ StrReplace(clip.contents, "`n", "`n", newLinesInClip)
+		;~ return newLinesInClip
+	;~ }
 
 	getClipToAnalyze(ByRef direction, alreadyScanned)
 	{
