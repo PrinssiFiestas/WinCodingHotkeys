@@ -182,7 +182,7 @@ highlightInner:
 
 	rPosition := findMatching("Right")
 
-	; Go to rChar
+	; Go to rChar ; Make this faster by checking if its faster to go from right to left
 	SendInput {Left}
 	rIndex := rPosition.index
 	Loop %rIndex%
@@ -204,8 +204,6 @@ highlightInner:
 	}
 	else ; rChar is at the same line as lChar
 	{
-		;~ total := rIndex + lIndex
-		;~ Loop %total%
 		Loop % rIndex + lOffset
 			SendInput +{Left}
 	}
@@ -262,17 +260,41 @@ highlightInner:
 			SendInput +{%verticalDirection%}
 		Sleep 10
 		SendInput ^c
-		ClipWait 0
-		if (direction == "Left")
+		ClipWait 0.1
+		if (ErrorLevel == 1 && alreadyScanned == 0) ; we're on 1st/last line and using Notepad.exe
+		{
+			; Try scanning the current line
+			if (direction == "Left")
+				SendInput +{Home}
+			else
+				SendInput +{End}
+			Sleep 10
+			SendInput ^c
+			;~ if (ErrorLevel == 1) ; blkdsajf
+				;~ return ; return what????
+			clip := Clipboard
+		}
+		else if (direction == "Left")
 			clip := SubStr(Clipboard, 1, StrLen(Clipboard) - alreadyScanned)
 		else
 			clip := SubStr(Clipboard, alreadyScanned + 1)
+
 		if (clip == "")
 		{
 			MsgBox Couldn't find matching `'%inputtedChar%`'
 			;Clipboard := clipboardStorage ; !!!! HABDLE
-			return ""
+			return "" ; this was wrong in the first place!
 		}
+		;~ if (direction == "Left")
+			;~ clip := SubStr(Clipboard, 1, StrLen(Clipboard) - alreadyScanned)
+		;~ else
+			;~ clip := SubStr(Clipboard, alreadyScanned + 1)
+		;~ if (clip == "")
+		;~ {
+			;~ MsgBox Couldn't find matching `'%inputtedChar%`'
+			;~ ;Clipboard := clipboardStorage ; !!!! HABDLE
+			;~ return "" ; this was wrong in the first place!
+		;~ }
 		return { contents: clip, length: StrLen(clip) }
 	}
 

@@ -260,16 +260,28 @@ highlightInner:
 			SendInput +{%verticalDirection%}
 		Sleep 10
 		SendInput ^c
-		ClipWait 0
-		if (direction == "Left")
+		ClipWait 0.1
+		if (ErrorLevel == 1 && alreadyScanned == 0) ; we're on 1st/last line and using Notepad.exe
+		{
+			; Try scanning the current line
+			if (direction == "Left")
+				SendInput +{Home}
+			else
+				SendInput +{End}
+			Sleep 10
+			SendInput ^c
+			clip := Clipboard
+		}
+		else if (direction == "Left")
 			clip := SubStr(Clipboard, 1, StrLen(Clipboard) - alreadyScanned)
 		else
 			clip := SubStr(Clipboard, alreadyScanned + 1)
-		if (clip == "")
+
+		if (clip == "") ; Move error handling to caller
 		{
 			MsgBox Couldn't find matching `'%inputtedChar%`'
 			;Clipboard := clipboardStorage ; !!!! HABDLE
-			return ""
+			return "" ; this was wrong in the first place!
 		}
 		return { contents: clip, length: StrLen(clip) }
 	}

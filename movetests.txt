@@ -1,4 +1,4 @@
-does it work here? { in braces } other garbage text	 NPP OK NP FAILED
+does it work here? { in braces } other garbage text	 OK
 {
 	faadddf OK
 }
@@ -27,7 +27,7 @@ asdf
 ghjhtye
 	{
 		{
-		6th lin[]e up  5th down	 OK
+		6th lin[]e up  5th down	 	OK
 		}
 	}
 	fasdf
@@ -87,4 +87,4 @@ with newline
 {
 	sadsadfdfds OK
 }
-does it work here? { if } other garbage text NPP OK NP FAILED
+does it work here? { if } other garbage text OK
