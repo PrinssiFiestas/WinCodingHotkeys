@@ -122,10 +122,17 @@ highlightInner:
 
 	clipboardStorage := Clipboard
 
-	class Position ; relative to cursor
+	class Position
 	{
-		row := 0
+		row := 0 ; relative to cursor
+
+		; Columns are relative to cursor position when rChar and lChar are on the same
+		; line. Otherwise lChar column is relative to line end and rChar is relative to
+		; line start. These cases have to be handled separately to increase speed by
+		; eliminating the need for redundant scan for line position or always moving
+		; relative to cursor position.
 		column := 0
+
 		found := false
 	}
 	lPosition := new Position
@@ -141,8 +148,35 @@ highlightInner:
 	; Get back to starting position
 	SendInput {Right}
 
-	; Get cursor position for the case that lChar is on the same line with rChar
-	if (lPosition.row == 0)
+	rPosition := findMatching("Right")
+
+	; There's a bug somewhere which makes findMatching() to always find rChar at the end of file
+	if ( ! rPosition.found)
+	{
+		MsgBox Couldn't find matching %rChar%!
+		goto highlightInnerFinish
+	}
+
+	; Get back to starting position
+	SendInput {Left}
+
+	; ----------------------------------------------------
+	;	Special cases
+
+	; When rChar is on the same line with lChar position.column can be used directly
+	if (lPosition.row == 0 && rPosition.row == 0)
+	{
+		Loop % rPosition.column
+			SendInput {Right}
+		Loop % rPosition.column + lPosition.column
+			SendInput +{Left}
+		goto highlightInnerFinish
+	}
+
+	; When rChar is on different line than rChar and lPosition is on the first line, then
+	; column needs to be updated to be relative to line end rather than cursor so it can be
+	; found reliably
+	if (lPosition.row == 0 && rPosition.row > 0)
 	{
 		Clipboard := ""
 		SendInput +{End}
@@ -157,20 +191,12 @@ highlightInner:
 		}
 	}
 
-	rPosition := findMatching("Right")
-
-	; There's a bug somewhere which makes findMatching() to always find rChar at the end of file
-	if ( ! rPosition.found)
-	{
-		MsgBox Couldn't find matching %rChar%!
-		goto highlightInnerFinish
-	}
+	; ----------------------------------------------------
 
 	; Go to rChar
-	SendInput {Left} ; Get back to starting position
 	if (rPosition.row > 0)
 	{
-		SendInput {End}{Right} ; Go to column 0 on next line
+		SendInput {End}{Right}
 		Loop % rPosition.row - 1
 			SendInput {Down}
 	}
@@ -179,23 +205,14 @@ highlightInner:
 
 	; Highlight from rChar to lChar
 	rowsToLeftChar := lPosition.row + rPosition.row
-	lColumn := lPosition.column
-	if (rowsToLeftChar > 0)
+	while (rowsToLeftChar > 0)
 	{
-		while (rowsToLeftChar > 0)
-		{
-			SendInput +{Up}
-			rowsToLeftChar--
-		}
-		SendInput +{End}
-		Loop %lColumn%
-			SendInput +{Left}
+		SendInput +{Up}
+		rowsToLeftChar--
 	}
-	else ; rChar is at the same line as lChar
-	{
-		Loop % rPosition.column + lOffset
-			SendInput +{Left}
-	}
+	SendInput +{End}
+	Loop % lPosition.column
+		SendInput +{Left}
 
 	if (InStr(A_ThisHotkey, "Delete"))
 		SendInput {Delete}
