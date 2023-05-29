@@ -279,6 +279,7 @@ highlightInnerFinish:
 				SendInput +{End}
 			Sleep 10
 			SendInput ^c
+			ClipWait 0.1
 			clip := Clipboard
 		}
 		else if (direction == "Left")

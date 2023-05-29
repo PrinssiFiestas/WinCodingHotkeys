@@ -150,7 +150,7 @@ highlightInner:
 	if ( ! lPosition.found)
 	{
 		MsgBox Couldn't find valid %lChar%!
-		goto highlightInnerFinish
+		;goto highlightInnerFinish
 	}
 
 	; Get back to starting position
@@ -162,7 +162,7 @@ highlightInner:
 	if ( ! rPosition.found)
 	{
 		MsgBox Couldn't find matching %rChar%!
-		goto highlightInnerFinish
+		;goto highlightInnerFinish
 	}
 
 	; Get back to starting position
@@ -253,7 +253,7 @@ highlightInnerFinish:
 				break
 		}
 		if (InStr(A_ThisHotkey, " i "))
-			position.index--
+			position.column--
 		return position
 	}
 

@@ -65,7 +65,7 @@ if
 		{ aferwf
 			s
 		}
-		aelse äsfasdfafd	OK
+		aelse äsfaasdfafd	OK
 		{
 			jfodfsdf
 		}
