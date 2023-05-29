@@ -201,17 +201,12 @@ highlightInner:
 	}
 
 	if (InStr(A_ThisHotkey, "Delete"))
-	{
 		SendInput {Delete}
-	}
-	else ; MOVE BELOW
-	{
-		; Revert initial press when activated hotkey ; MOVE TO RESETG
-		SendInput {Insert}
-	}
 
 highlightInnerFinish:
 
+	if (InStr(A_ThisHotkey, "Insert"))
+		SendInput {Insert}
 	Clipboard := clipboardStorage
 	return
 

@@ -122,9 +122,7 @@ highlightInner:
 	lChar := SubStr(pairs, charIndex - !Mod(charIndex, 2), 1)
 	rChar := SubStr(pairs, charIndex +  Mod(charIndex, 2), 1)
 
-	clipboardStorage := Clipboard ; AGAIN HANDLE
-
-	; -------------------- TEMP SEPARATOR: REMOVE AFTER REFACTOR
+	clipboardStorage := Clipboard
 
 	class Position
 	{
@@ -133,7 +131,6 @@ highlightInner:
 		rowsMoved := 0
 		found := false
 	}
-
 	lPosition := new Position
 	rPosition := new Position
 
