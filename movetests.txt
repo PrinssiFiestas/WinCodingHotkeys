@@ -7,7 +7,7 @@ fdsaf
 
 asdf
 sdaf
-fdsa {f safd asdf asdf asdf asdf asdf  {} 	NPP OK NP FAILED
+fdsa {f safd asdf asdf asdf asdf asdf  {} 	OK
 asdf
 ghjhtye
 	{
@@ -21,7 +21,7 @@ ghjhtye
 fdsa } fsdfsa	OK
 fds
 
-fdsa {f saf(d asdf asdf asdf asdf asdf asdf			NPP OK NP FAILED
+fdsa {f saf(d asdf asdf asdf asdf asdf asdf			OK
 fdsa
 asdf
 ghjhtye
@@ -50,16 +50,16 @@ ghjhtye
 }
 fds <>
 
-0fdsa {} sfailike here { somting } should 	NPP OK NP FAILED
-0fdsa { try { some {} fdsa } fdsa }		NPP OK NP FAILED
+0fdsa {} sfailike here { somting } should 	OK
+0fdsa { try { some {} fdsa } fdsa }		OK
 
-" bajfq" ffadadfj " fjhdisafj "		NPP OK NP FAILED
+" bajfq" ffadadfj " fjhdisafj "		OK
 
 if
 { qwe
 	for
 	{ qwe
-		f		OK 
+		f		OK
 		fdoa		OK
 		if
 		{ aferwf
@@ -74,7 +74,7 @@ if
 }
 	
 	
-	fjhdusajsdi { asdf} {fjsadio} {fjaikds}		NPP OK NP FAILED
+	fjhdusajsdi { asdf} {fjsadio} {fjaikds}		OK
 	
 	if
 	{

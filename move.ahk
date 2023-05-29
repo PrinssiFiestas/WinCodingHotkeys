@@ -182,7 +182,7 @@ highlightInner:
 
 	rPosition := findMatching("Right")
 
-	; Go to rChar
+	; Go to rChar ; Make this faster by checking if its faster to go from right to left
 	SendInput {Left}
 	rIndex := rPosition.index
 	Loop %rIndex%
@@ -204,8 +204,6 @@ highlightInner:
 	}
 	else ; rChar is at the same line as lChar
 	{
-		;~ total := rIndex + lIndex
-		;~ Loop %total%
 		Loop % rIndex + lOffset
 			SendInput +{Left}
 	}

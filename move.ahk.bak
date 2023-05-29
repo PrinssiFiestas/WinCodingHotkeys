@@ -103,7 +103,7 @@ findCharInLine:
 	return
 }
 
-; remember INSERT at errors!
+; remember INSERT at errors! also fix infinite loop on errors!
 ; maybe with reset callback or something
 highlightInner:
 {
