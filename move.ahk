@@ -39,6 +39,9 @@ Loop Parse, arrowList, " "
 ~Left & t Up::
 ~Right & t Up::gosub findCharInLine
 
+; Delete line in any editor
+~Delete & d::gosub deleteLine
+
 return ; --------------------------------------------------------------------------------
 ;
 ;		IMPLEMENTATIONS
@@ -109,6 +112,44 @@ findCharInLine:
 	; Highlight to found character
 	Loop % charPosition + (InStr(A_ThisHotkey, " f ") != 0)
 		SendInput +{%direction%}
+
+	Clipboard := clipboardStorage
+	return
+}
+
+; ---------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------------------
+
+; Highlight full line including newline from previous line
+; Highlighted line is copied so checking if first line can be done by InStr(Clipboard, "´n")
+highlightLineUp:
+{
+	SendInput {End}+{Up}
+	Sleep % highlightWaitTime
+	SendInput ^c
+	ClipWait % clipWaitTime
+	editorDidntHighlight := ErrorLevel
+	if (editorDidntHighlight) ; try again
+		SendInput {End}+{Home}+{Home}
+	return
+}
+
+; ---------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------------------
+
+deleteLine:
+{
+	clipboardStorage := Clipboard
+	Clipboard := ""
+
+	gosub highlightLineUp
+
+	; Delete highlighted line
+	onFirstLine := ! InStr(Clipboard, "`n")
+	if (onFirstLine)
+		SendInput {Backspace}{Delete}
+	else
+		SendInput +{End}{BackSpace}{Right}
 
 	Clipboard := clipboardStorage
 	return
