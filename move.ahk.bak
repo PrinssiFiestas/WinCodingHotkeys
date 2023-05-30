@@ -42,6 +42,14 @@ Loop Parse, arrowList, " "
 ; Delete line in any editor
 ~Delete & d::gosub deleteLine
 
+; Move and scroll up/down
+; Only works with editors that scroll with ^Up or ^Down
+; Note that scroll() may also be called in repeatArrows
+<^>!Up::
+RAlt & Up::scroll("Up")
+<^>!Down::
+RAlt & Down::scroll("Down")
+
 return ; --------------------------------------------------------------------------------
 ;
 ;		IMPLEMENTATIONS
@@ -114,6 +122,15 @@ findCharInLine:
 		SendInput +{%direction%}
 
 	Clipboard := clipboardStorage
+	return
+}
+
+; ---------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------------------
+
+scroll(direction)
+{
+	SendInput ^{%direction%}{%direction%}
 	return
 }
 

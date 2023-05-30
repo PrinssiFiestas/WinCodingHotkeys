@@ -42,6 +42,14 @@ Loop Parse, arrowList, " "
 ; Delete line in any editor
 ~Delete & d::gosub deleteLine
 
+; Move and scroll up/down
+; Only works with editors that scroll with ^Up or ^Down
+; Note that scroll() may also be called in repeatArrows
+<^>!Up::
+RAlt & Up::scroll("Up")
+<^>!Down::
+RAlt & Down::scroll("Down")
+
 return ; --------------------------------------------------------------------------------
 ;
 ;		IMPLEMENTATIONS
@@ -61,12 +69,16 @@ repeatArrows:
 	if (number == 0)
 		number := 10
 
-	Loop %number%
+	Loop % number
 	{
-		if (GetKeyState("Ctrl"))
+		if (GetKeyState("RAlt") || GetKeyState("AltGr"))
+			scroll(arrow)
+		else if (GetKeyState("Ctrl"))
 			SendInput ^{%arrow%}
 		else if (GetKeyState("Shift"))
 			SendInput +{%arrow%}
+		else if (GetKeyState("Alt"))
+			SendInput !{%arrow%}
 		else
 			SendInput {%arrow%}
 	}
@@ -114,6 +126,15 @@ findCharInLine:
 		SendInput +{%direction%}
 
 	Clipboard := clipboardStorage
+	return
+}
+
+; ---------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------------------
+
+scroll(direction)
+{
+	SendInput ^{%direction%}{%direction%}
 	return
 }
 
