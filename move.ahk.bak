@@ -161,7 +161,7 @@ highlightLineUp:
 	lfPosition := InStr(Clipboard, "`n")
 	newLinePosition := crPosition < lfPosition ? crPosition : lfPosition
 
-	Loop % newLinePosition
+	Loop % newLinePosition - 1
 		SendInput +{Right}
 
 	editorDidntHighlight := ErrorLevel
@@ -203,13 +203,11 @@ highlightLine:
 
 	arrow := StrSplit(A_ThisHotkey, " & ")[2]
 	if (arrow == "Left" && notOnFirstLine)
-	{
 		SendInput +{Right}
-	}
-	else if (arrow == "Right")
-	{
+	else if (arrow == "Right" && notOnFirstLine)
 		SendInput {End}{Right}+{End}
-	}
+	else if (arrow == "Right")
+		SendInput {Left}+{End}
 	else if (arrow == "Down")
 		SendInput {End}{Right}+{End}+{Right}
 

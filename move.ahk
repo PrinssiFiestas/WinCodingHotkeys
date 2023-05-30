@@ -203,15 +203,15 @@ highlightLine:
 
 	arrow := StrSplit(A_ThisHotkey, " & ")[2]
 	if (arrow == "Left" && notOnFirstLine)
-	{
 		SendInput +{Right}
-	}
-	else if (arrow == "Right")
-	{
+	else if (arrow == "Right" && notOnFirstLine)
 		SendInput {End}{Right}+{End}
-	}
-	else if (arrow == "Down")
+	else if (arrow == "Down" && notOnFirstLine)
 		SendInput {End}{Right}+{End}+{Right}
+	else if (arrow == "Right")
+		SendInput {Left}+{End}
+	else if (arrow == "Down")
+		SendInput {Left}+{End}+{Right}
 
 	SendInput {Insert} ; revert inital press
 	Clipboard := clipboardStorage
