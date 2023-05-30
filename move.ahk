@@ -35,7 +35,9 @@ Loop Parse, arrowList, " "
 ; Find character in line
 ; Wait for character input, find it in current line, highlight to it and move cursor to it
 ~Left & f Up::
-~Right & f Up::gosub findCharInLine
+~Right & f Up::
+~Left & t Up::
+~Right & t Up::gosub findCharInLine
 
 return ; --------------------------------------------------------------------------------
 ;
@@ -105,7 +107,7 @@ findCharInLine:
 
 	SendInput {%jumpBack%} ; revert initial arrow press
 	; Highlight to found character
-	Loop %charPosition%
+	Loop % charPosition + (InStr(A_ThisHotkey, " f ") != 0)
 		SendInput +{%direction%}
 
 	Clipboard := clipboardStorage
