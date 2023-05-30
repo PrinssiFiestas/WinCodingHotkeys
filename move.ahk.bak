@@ -31,13 +31,18 @@ Loop Parse, arrowList, " "
 ~Delete & a Up::
 ~Insert & a Up::gosub highlightInner
 
-
 ; Find character in line
 ; Wait for character input, find it in current line, highlight to it and move cursor to it
 ~Left & f Up::
 ~Right & f Up::
 ~Left & t Up::
 ~Right & t Up::gosub findCharInLine
+
+; Highlight line
+~Insert & Left::
+~Insert & Right::
+~Insert & Up::
+~Insert & Down::gosub highlightLine
 
 ; Delete line in any editor
 ~Delete & d::gosub deleteLine
@@ -69,12 +74,16 @@ repeatArrows:
 	if (number == 0)
 		number := 10
 
-	Loop %number%
+	Loop % number
 	{
-		if (GetKeyState("Ctrl"))
+		if (GetKeyState("RAlt") || GetKeyState("AltGr"))
+			scroll(arrow)
+		else if (GetKeyState("Ctrl"))
 			SendInput ^{%arrow%}
 		else if (GetKeyState("Shift"))
 			SendInput +{%arrow%}
+		else if (GetKeyState("Alt"))
+			SendInput !{%arrow%}
 		else
 			SendInput {%arrow%}
 	}
@@ -139,12 +148,22 @@ scroll(direction)
 
 ; Highlight full line including newline from previous line
 ; Highlighted line is copied so checking if first line can be done by InStr(Clipboard, "´n")
+; Remember to store Clipboard before use!
 highlightLineUp:
 {
+	Clipboard := ""
 	SendInput {End}+{Up}
 	Sleep % highlightWaitTime
 	SendInput ^c
 	ClipWait % clipWaitTime
+
+	crPosition := InStr(Clipboard, "`r")
+	lfPosition := InStr(Clipboard, "`n")
+	newLinePosition := crPosition < lfPosition ? crPosition : lfPosition
+
+	Loop % newLinePosition
+		SendInput +{Right}
+
 	editorDidntHighlight := ErrorLevel
 	if (editorDidntHighlight) ; try again
 		SendInput {End}+{Home}+{Home}
@@ -168,6 +187,33 @@ deleteLine:
 	else
 		SendInput +{End}{BackSpace}{Right}
 
+	Clipboard := clipboardStorage
+	return
+}
+
+; ---------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------------------
+
+highlightLine:
+{
+	clipboardStorage := Clipboard
+
+	gosub highlightLineUp
+	notOnFirstLine := InStr(Clipboard, "`n")
+
+	arrow := StrSplit(A_ThisHotkey, " & ")[2]
+	if (arrow == "Left" && notOnFirstLine)
+	{
+		SendInput +{Right}
+	}
+	else if (arrow == "Right")
+	{
+		SendInput {End}{Right}+{End}
+	}
+	else if (arrow == "Down")
+		SendInput {End}{Right}+{End}+{Right}
+
+	SendInput {Insert} ; revert inital press
 	Clipboard := clipboardStorage
 	return
 }
