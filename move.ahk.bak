@@ -149,9 +149,10 @@ scroll(direction)
 ; ---------------------------------------------------------------------------------------
 
 ; Highlight full line including newline from previous line
+; Usually it's better to use _highlightLine(), but this might be faster
 ; Highlighted line is copied so checking if first line can be done by InStr(Clipboard, "´n")
-; Remember to store Clipboard before use!
-highlightLineUp:
+; Store Clipboard before use!
+_highlightLineUp:
 {
 	Clipboard := ""
 	SendInput {End}+{Up}
@@ -180,7 +181,7 @@ deleteLine:
 	clipboardStorage := Clipboard
 	Clipboard := ""
 
-	gosub highlightLineUp
+	gosub _highlightLineUp
 
 	; Delete highlighted line
 	onFirstLine := ! InStr(Clipboard, "`n")
@@ -198,9 +199,16 @@ deleteLine:
 
 highlightLine(direction)
 {
+	_highlightLine(direction)
+	SendInput {Insert} ; revert inital press
+	return
+}
+
+_highlightLine(direction)
+{
 	clipboardStorage := Clipboard
 
-	gosub highlightLineUp
+	gosub _highlightLineUp
 	notOnFirstLine := InStr(Clipboard, "`n")
 
 	if (direction == "Left" && notOnFirstLine)
@@ -214,34 +222,9 @@ highlightLine(direction)
 	else if (direction == "Down")
 		SendInput {Left}+{End}+{Right}
 
-	SendInput {Insert} ; revert inital press
 	Clipboard := clipboardStorage
 	return
 }
-
-;~ highlightLine:
-;~ {
-	;~ clipboardStorage := Clipboard
-
-	;~ gosub highlightLineUp
-	;~ notOnFirstLine := InStr(Clipboard, "`n")
-
-	;~ arrow := StrSplit(A_ThisHotkey, " & ")[2]
-	;~ if (arrow == "Left" && notOnFirstLine)
-		;~ SendInput +{Right}
-	;~ else if (arrow == "Right" && notOnFirstLine)
-		;~ SendInput {End}{Right}+{End}
-	;~ else if (arrow == "Down" && notOnFirstLine)
-		;~ SendInput {End}{Right}+{End}+{Right}
-	;~ else if (arrow == "Right")
-		;~ SendInput {Left}+{End}
-	;~ else if (arrow == "Down")
-		;~ SendInput {Left}+{End}+{Right}
-
-	;~ SendInput {Insert} ; revert inital press
-	;~ Clipboard := clipboardStorage
-	;~ return
-;~ }
 
 ; ---------------------------------------------------------------------------------------
 ; ---------------------------------------------------------------------------------------

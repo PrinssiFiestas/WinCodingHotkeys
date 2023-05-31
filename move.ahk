@@ -149,9 +149,10 @@ scroll(direction)
 ; ---------------------------------------------------------------------------------------
 
 ; Highlight full line including newline from previous line
+; Usually it's better to use _highlightLine(), but this might be faster
 ; Highlighted line is copied so checking if first line can be done by InStr(Clipboard, "´n")
 ; Store Clipboard before use!
-highlightLineUp:
+_highlightLineUp:
 {
 	Clipboard := ""
 	SendInput {End}+{Up}
@@ -180,7 +181,7 @@ deleteLine:
 	clipboardStorage := Clipboard
 	Clipboard := ""
 
-	gosub highlightLineUp
+	gosub _highlightLineUp
 
 	; Delete highlighted line
 	onFirstLine := ! InStr(Clipboard, "`n")
@@ -207,7 +208,7 @@ _highlightLine(direction)
 {
 	clipboardStorage := Clipboard
 
-	gosub highlightLineUp
+	gosub _highlightLineUp
 	notOnFirstLine := InStr(Clipboard, "`n")
 
 	if (direction == "Left" && notOnFirstLine)
@@ -265,7 +266,7 @@ highlightInner:
 	lPosition := new Position
 	rPosition := new Position
 
-	lPosition := findMatching("Left")
+	lPosition := _findMatching("Left")
 	if ( ! lPosition.found)
 	{
 		MsgBox Couldn't find valid %lChar%!
@@ -275,9 +276,9 @@ highlightInner:
 	; Get back to starting position
 	SendInput {Right}
 
-	rPosition := findMatching("Right")
+	rPosition := _findMatching("Right")
 
-	; There's a bug somewhere which makes findMatching() to always find rChar at the end of file
+	; There's a bug somewhere which makes _findMatching() to always find rChar at the end of file
 	if ( ! rPosition.found)
 	{
 		MsgBox Couldn't find matching %rChar%!
@@ -354,19 +355,19 @@ highlightInnerFinish:
 	; -------------------------------------------------
 	;	Helpers
 
-	findMatching(ByRef direction)
+	_findMatching(ByRef direction)
 	{
 		matchCount := { l: 0, r: 0 }
 		alreadyScanned := 0
 		position := new Position
 		Loop
 		{
-			clipToScan := getClipToAnalyze(direction, alreadyScanned)
+			clipToScan := _getClipToAnalyze(direction, alreadyScanned)
 			if (clipToScan.contents == "")
 				break ; return with position.found = false
 			alreadyScanned += clipToScan.length
 
-			scanClip(clipToScan, position, matchCount, direction)
+			_scanClip(clipToScan, position, matchCount, direction)
 
 			if (position.found)
 				break
@@ -376,7 +377,7 @@ highlightInnerFinish:
 		return position
 	}
 
-	getClipToAnalyze(ByRef direction, alreadyScanned)
+	_getClipToAnalyze(ByRef direction, alreadyScanned)
 	{
 		global rowsToAnalyze
 		global inputtedChar
@@ -409,7 +410,7 @@ highlightInnerFinish:
 		return { contents: clip, length: StrLen(clip) }
 	}
 
-	scanClip(ByRef clipToScan, ByRef position, ByRef matches, ByRef direction)
+	_scanClip(ByRef clipToScan, ByRef position, ByRef matches, ByRef direction)
 	{
 		global lChar, rChar
 		char := ""
@@ -439,12 +440,12 @@ highlightInnerFinish:
 
 			; --------------------------------------
 
-			if (checkCounts(matches, direction) == "LeftMatch" && direction == "Left")
+			if (_checkCounts(matches, direction) == "LeftMatch" && direction == "Left")
 			{
 				position.found := true
 				return
 			}
-			else if (checkCounts(matches, direction) == "RightMatch" && direction == "Right")
+			else if (_checkCounts(matches, direction) == "RightMatch" && direction == "Right")
 			{
 				position.found := true
 				return
@@ -454,7 +455,7 @@ highlightInnerFinish:
 		return
 	}
 
-	checkCounts(counts, ByRef direction)
+	_checkCounts(counts, ByRef direction)
 	{
 		global lChar, rChar
 		if (direction == "Left" && (counts.l > counts.r || (rChar == lChar && counts.l > 0)))
