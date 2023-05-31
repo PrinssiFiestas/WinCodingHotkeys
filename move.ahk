@@ -41,8 +41,8 @@ Loop Parse, arrowList, " "
 ; Copy or cut
 ; Press 'i', 'a', 'f' or 't' while holding 'Ctrl' for combined function or press twice to
 ; copy/cut line
-~^c UP::
-~^x UP::gosub copy
+~^~c UP::
+~^~x UP::gosub copy
 
 ; Highlight line
 ~Insert & Left::
@@ -72,7 +72,19 @@ return ; -----------------------------------------------------------------------
 #Persistent
 #Warn
 
-global clipboardStorage
+getHighlightedContents()
+{
+	clipboardStorage := Clipboard
+	Clipboard := ""
+	Sleep % highlightWaitTime
+	SendInput ^c
+	ClipWait % clipWaitTime
+	contents := Clipboard
+	Clipboard := clipboardStorage
+	return contents
+}
+
+; ---------------------------------------------------------------------------------------
 
 repeatArrows:
 {
@@ -103,33 +115,25 @@ repeatArrows:
 
 findCharInLine:
 {
-	clipboardStorage := Clipboard
-	Clipboard := "" ; empty always before ClipWait
-
 	direction := InStr(A_ThisHotkey, "Left") ? "Left" : "Right"
 	jump      := direction == "Left" ? "Home" : "End"
 	jumpBack  := direction == "Left" ? "Right" : "Left"
 
-	SendInput +{%jump%} ; highligh line from cursor position to get it's contents
-	Sleep % highlightWaitTime
-	SendInput ^c
-	ClipWait % clipWaitTime
-	if (ErrorLevel == 1)
+	SendInput +{%jump%}
+	lineContents := getHighlightedContents()
+
+	if (lineContents == "")
 	{
 		MsgBox End of line or failure reading line!
-		Clipboard := clipboardStorage
 		return
 	}
-	lineContents := Clipboard
 	SendInput {%jumpBack%} ; get back to original cursor position
 
 	Input char, L1
 	charPosition := InStr(lineContents, char, true, direction == "Right" ? 1 : -1)
 	if (charPosition == -1)
-	{
-		Clipboard := clipboardStorage
 		return
-	}
+
 	if (direction == "Left")
 		charPosition := StrLen(lineContents) - charPosition + 1
 
@@ -138,7 +142,6 @@ findCharInLine:
 	Loop % charPosition + (InStr(A_ThisHotkey, " f ") != 0)
 		SendInput +{%direction%}
 
-	Clipboard := clipboardStorage
 	return
 }
 
@@ -157,29 +160,15 @@ scroll(direction)
 ; Highlight full line including newline from previous line
 ; Usually it's better to use _highlightLine(), but this might be faster
 ; Highlighted line is copied so checking if first line can be done by InStr(Clipboard, "´n")
-; Store Clipboard before use!
-_highlightLineUp:
+_highlightLineUp()
 {
-	Clipboard := ""
 	SendInput {End}+{Up}
-	Sleep % highlightWaitTime
-	SendInput ^c
-	ClipWait % clipWaitTime
-
-	;~ crPosition := InStr(Clipboard, "`r")
-	;~ lfPosition := InStr(Clipboard, "`n")
-	;~ newLinePosition := crPosition < lfPosition ? crPosition : lfPosition
-
-	;~ Loop % newLinePosition - 1
-		;~ SendInput +{Right}
-
-	if (InStr(Clipboard, "`n"))
+	clip := getHighlightedContents()
+	if (InStr(clip, "`n"))
 		SendInput +{End}
-
-	editorDidntHighlight := ErrorLevel
-	if (editorDidntHighlight) ; try again
+	if (clip == "") ; try again with different method
 		SendInput {End}+{Home}+{Home}
-	return
+	return clip
 }
 
 ; ---------------------------------------------------------------------------------------
@@ -187,19 +176,14 @@ _highlightLineUp:
 
 deleteLine:
 {
-	clipboardStorage := Clipboard
-	Clipboard := ""
-
-	gosub _highlightLineUp
-
-	; Delete highlighted line
+	clip := getHighlightedContents()
 	onFirstLine := ! InStr(Clipboard, "`n")
+
 	if (onFirstLine)
 		SendInput {Backspace}{Delete}
 	else
 		SendInput +{End}{BackSpace}{Right}
 
-	Clipboard := clipboardStorage
 	return
 }
 
@@ -217,8 +201,8 @@ _highlightLine(direction)
 {
 	clipboardStorage := Clipboard
 
-	gosub _highlightLineUp
-	notOnFirstLine := InStr(Clipboard, "`n")
+	clip := _highlightLineUp()
+	notOnFirstLine := InStr(clip, "`n")
 
 	if (direction == "Left" && notOnFirstLine)
 		SendInput +{Right}
@@ -240,9 +224,6 @@ _highlightLine(direction)
 
 copy:
 {
-	clipboardStorage := Clipboard
-	Clipboard := ""
-
 	key := ""
 	keylist := "i a f t c x"
 
@@ -255,7 +236,7 @@ copy:
 			if (GetKeyState(A_LoopField))
 			{
 				key := A_LoopField
-				;break
+				break 2
 			}
 		}
 	}
@@ -263,29 +244,17 @@ copy:
 	if (key == "c")
 	{
 		SendInput +{End}
+		clip := getHighlightedContents()
+		startingPosition := StrLen(clip)
 
-		; MOVE THESE LINES TO A SEPARATE FUNCTION
-		; and remember to change error handling for callers!
-		Clipboard := ""
-		Sleep % highlightWaitTime
-		SendInput ^c
-		ClipWait % clipWaitTime
-
-		startingPosition := StrLen(Clipboard)
 		_highlightLine("Left")
-
-		Clipboard := ""
-		;Sleep 1500
-		Sleep % highlightWaitTime
-		SendInput ^c
-		ClipWait % clipWaitTime
+		Clipboard := getHighlightedContents()
 
 		SendInput {End}
 		Loop % startingPosition
 			SendInput {Left}
 	}
 
-	;Clipboard := clipboardStorage ; Only return it back to user on errors!
 	return
 }
 
@@ -296,7 +265,7 @@ highlightInner:
 {
 	lChar := ""
 	rChar := ""
-	Input inputtedChar, L1
+	Input inputtedChar, L1 ; ADD ESCAPE <-----------
 
 	; Wait for intrusive modifiers to be lifted
 	while (GetKeyState("Ctrl") || GetKeyState("Alt") || GetKeyState("AltGr") || GetKeyState("Shift"))
@@ -369,15 +338,12 @@ highlightInner:
 	; found reliably
 	if (lPosition.row == 0 && rPosition.row > 0)
 	{
-		Clipboard := ""
 		SendInput +{End}
-		Sleep % highlightWaitTime
-		SendInput ^c
-		ClipWait % clipWaitTime
-		if (ErrorLevel == 0)
+		clip := getHighlightedContents()
+		if (clip != "")
 		{
 			lOffset := lPosition.column
-			lPosition.column += StrLen(Clipboard)
+			lPosition.column += StrLen(clip)
 			SendInput {Left} ; get back
 		}
 	}
@@ -412,7 +378,6 @@ highlightInnerFinish:
 
 	if (InStr(A_ThisHotkey, "Insert"))
 		SendInput {Insert}
-	Clipboard := clipboardStorage
 	return
 
 	; -------------------------------------------------
@@ -444,31 +409,26 @@ highlightInnerFinish:
 	{
 		global rowsToAnalyze
 		global inputtedChar
-		global verticalDirection
-		Clipboard := ""
-		clip := ""
+		global verticalDirection ; does this need to be declared here?
+
 		verticalDirection := direction == "Left" ? "Up" : "Down"
 		Loop %rowsToAnalyze%
 			SendInput +{%verticalDirection%}
-		Sleep % highlightWaitTime
-		SendInput ^c
-		ClipWait % clipWaitTime
-		if (ErrorLevel == 1 && alreadyScanned == 0) ; we're on 1st/last line and using Notepad.exe
+		clip := getHighlightedContents()
+
+		if (clip == "" && alreadyScanned == 0) ; we're on 1st/last line on Notepad.exe
 		{
 			; Try scanning the current line
 			if (direction == "Left")
 				SendInput +{Home}
 			else
 				SendInput +{End}
-			Sleep % highlightWaitTime
-			SendInput ^c
-			ClipWait % clipWaitTime
-			clip := Clipboard
+			clip := getHighlightedContents()
 		}
 		else if (direction == "Left")
-			clip := SubStr(Clipboard, 1, StrLen(Clipboard) - alreadyScanned)
+			clip := SubStr(clip, 1, StrLen(clip) - alreadyScanned)
 		else
-			clip := SubStr(Clipboard, alreadyScanned + 1)
+			clip := SubStr(clip, alreadyScanned + 1)
 
 		return { contents: clip, length: StrLen(clip) }
 	}
