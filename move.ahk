@@ -4,7 +4,11 @@
 ;
 ; ---------------------------------------------------------------------------------------
 
+; Increasing this might increase speed for multi-line operations, but may introduce
+; pointless scrolling
 global rowsToAnalyze := 5
+
+; Increasing these might help if hotkeys fail sometimes
 global highlightWaitTime := 1
 global clipWaitTime := 0.01
 
