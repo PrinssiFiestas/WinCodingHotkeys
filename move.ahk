@@ -120,9 +120,9 @@ findCharInLine:
 	jumpBack  := direction == "Left" ? "Right" : "Left"
 
 	SendInput +{%jump%}
-	lineContents := getHighlightedContents()
+	lineFromCursor := getHighlightedContents()
 
-	if (lineContents == "")
+	if (lineFromCursor == "")
 	{
 		MsgBox End of line or failure reading line!
 		return
@@ -130,12 +130,12 @@ findCharInLine:
 	SendInput {%jumpBack%} ; get back to original cursor position
 
 	Input char, L1
-	charPosition := InStr(lineContents, char, true, direction == "Right" ? 1 : -1)
+	charPosition := InStr(lineFromCursor, char, true, direction == "Right" ? 1 : -1)
 	if (charPosition == -1)
 		return
 
 	if (direction == "Left")
-		charPosition := StrLen(lineContents) - charPosition + 1
+		charPosition := StrLen(lineFromCursor) - charPosition + 1
 
 	SendInput {%jumpBack%} ; revert initial arrow press
 	; Highlight to found character
@@ -176,9 +176,7 @@ _highlightLineUp()
 
 deleteLine:
 {
-	; clip := getHighlightedContents()
 	lineToDelete := _highlightLineUp()
-	;onFirstLine := ! InStr(Clipboard, "`n")
 	onFirstLine := ! InStr(lineToDelete, "`n")
 
 	if (onFirstLine)
@@ -201,10 +199,8 @@ highlightLine(direction)
 
 _highlightLine(direction)
 {
-	clipboardStorage := Clipboard
-
-	clip := _highlightLineUp()
-	notOnFirstLine := InStr(clip, "`n")
+	highlighted := _highlightLineUp()
+	notOnFirstLine := InStr(highlighted, "`n")
 
 	if (direction == "Left" && notOnFirstLine)
 		SendInput +{Right}
@@ -217,7 +213,6 @@ _highlightLine(direction)
 	else if (direction == "Down")
 		SendInput {Left}+{End}+{Right}
 
-	Clipboard := clipboardStorage
 	return
 }
 
@@ -246,8 +241,8 @@ copy:
 	if (key == "c")
 	{
 		SendInput +{End}
-		clip := getHighlightedContents()
-		startingPosition := StrLen(clip)
+		lineEnd := getHighlightedContents()
+		startingPosition := StrLen(lineEnd)
 
 		_highlightLine("Left")
 		Clipboard := getHighlightedContents()
@@ -279,8 +274,6 @@ highlightInner:
 		return
 	lChar := SubStr(pairs, charIndex - !Mod(charIndex, 2), 1)
 	rChar := SubStr(pairs, charIndex +  Mod(charIndex, 2), 1)
-
-	clipboardStorage := Clipboard
 
 	; --------------------------------------------
 
@@ -341,11 +334,11 @@ highlightInner:
 	if (lPosition.row == 0 && rPosition.row > 0)
 	{
 		SendInput +{End}
-		clip := getHighlightedContents()
-		if (clip != "")
+		lineTail := getHighlightedContents()
+		if (lineTail != "")
 		{
 			lOffset := lPosition.column
-			lPosition.column += StrLen(clip)
+			lPosition.column += StrLen(lineTail)
 			SendInput {Left} ; get back
 		}
 	}
@@ -416,9 +409,9 @@ highlightInnerFinish:
 		verticalDirection := direction == "Left" ? "Up" : "Down"
 		Loop %rowsToAnalyze%
 			SendInput +{%verticalDirection%}
-		clip := getHighlightedContents()
+		rows := getHighlightedContents()
 
-		if (clip == "" && alreadyScanned == 0) ; we're on 1st/last line on Notepad.exe
+		if (rows == "" && alreadyScanned == 0) ; we're on 1st/last line on Notepad.exe
 		{
 			; Try scanning the current line
 			if (direction == "Left")
@@ -428,9 +421,9 @@ highlightInnerFinish:
 			clip := getHighlightedContents()
 		}
 		else if (direction == "Left")
-			clip := SubStr(clip, 1, StrLen(clip) - alreadyScanned)
+			clip := SubStr(rows, 1, StrLen(rows) - alreadyScanned)
 		else
-			clip := SubStr(clip, alreadyScanned + 1)
+			clip := SubStr(rows, alreadyScanned + 1)
 
 		return { contents: clip, length: StrLen(clip) }
 	}
