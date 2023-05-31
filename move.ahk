@@ -163,12 +163,12 @@ scroll(direction)
 _highlightLineUp()
 {
 	SendInput {End}+{Up}
-	clip := getHighlightedContents()
-	if (InStr(clip, "`n"))
+	lineContents := getHighlightedContents()
+	if (InStr(lineContents, "`n"))
 		SendInput +{End}
-	if (clip == "") ; try again with different method
+	if (lineContents == "") ; try again with different method
 		SendInput {End}+{Home}+{Home}
-	return clip
+	return lineContents
 }
 
 ; ---------------------------------------------------------------------------------------
@@ -176,8 +176,10 @@ _highlightLineUp()
 
 deleteLine:
 {
-	clip := getHighlightedContents()
-	onFirstLine := ! InStr(Clipboard, "`n")
+	; clip := getHighlightedContents()
+	lineToDelete := _highlightLineUp()
+	;onFirstLine := ! InStr(Clipboard, "`n")
+	onFirstLine := ! InStr(lineToDelete, "`n")
 
 	if (onFirstLine)
 		SendInput {Backspace}{Delete}

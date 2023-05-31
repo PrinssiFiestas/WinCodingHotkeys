@@ -72,7 +72,7 @@ return ; -----------------------------------------------------------------------
 #Persistent
 #Warn
 
-gethighlightedContents()
+getHighlightedContents()
 {
 	clipboardStorage := Clipboard
 	Clipboard := ""
@@ -115,35 +115,25 @@ repeatArrows:
 
 findCharInLine:
 {
-	;~ clipboardStorage := Clipboard
-	;~ Clipboard := "" ; empty always before ClipWait
-
 	direction := InStr(A_ThisHotkey, "Left") ? "Left" : "Right"
 	jump      := direction == "Left" ? "Home" : "End"
 	jumpBack  := direction == "Left" ? "Right" : "Left"
 
-	SendInput +{%jump%} ; highligh line from cursor position to get it's contents
-	;~ Sleep % highlightWaitTime
-	;~ SendInput ^c
-	;~ ClipWait % clipWaitTime
-	;~ if (ErrorLevel == 1)
-	lineContents := gethighlightedContents()
+	SendInput +{%jump%}
+	lineContents := getHighlightedContents()
+
 	if (lineContents == "")
 	{
 		MsgBox End of line or failure reading line!
-		;~ Clipboard := clipboardStorage
 		return
 	}
-	;~ lineContents := Clipboard
 	SendInput {%jumpBack%} ; get back to original cursor position
 
 	Input char, L1
 	charPosition := InStr(lineContents, char, true, direction == "Right" ? 1 : -1)
 	if (charPosition == -1)
-	{
-		;~ Clipboard := clipboardStorage
 		return
-	}
+
 	if (direction == "Left")
 		charPosition := StrLen(lineContents) - charPosition + 1
 
@@ -152,7 +142,6 @@ findCharInLine:
 	Loop % charPosition + (InStr(A_ThisHotkey, " f ") != 0)
 		SendInput +{%direction%}
 
-	;~ Clipboard := clipboardStorage
 	return
 }
 
@@ -171,31 +160,15 @@ scroll(direction)
 ; Highlight full line including newline from previous line
 ; Usually it's better to use _highlightLine(), but this might be faster
 ; Highlighted line is copied so checking if first line can be done by InStr(Clipboard, "´n")
-; Store Clipboard before use!
-;~ _highlightLineUp:
 _highlightLineUp()
 {
-	;~ Clipboard := ""
-	;~ SendInput {End}+{Up}
-	;~ Sleep % highlightWaitTime
-	;~ SendInput ^c
-	;~ ClipWait % clipWaitTime
-
-	;~ if (InStr(Clipboard, "`n"))
-		;~ SendInput +{End}
-
-	;~ editorDidntHighlight := ErrorLevel
-	;~ if (editorDidntHighlight) ; try again
-		;~ SendInput {End}+{Home}+{Home}
-	;~ return
-
 	SendInput {End}+{Up}
-	clip := gethighlightedContents()
-	if (InStr(clip, "`n"))
+	lineContents := getHighlightedContents()
+	if (InStr(lineContents, "`n"))
 		SendInput +{End}
-	if (clip == "") ; try again with different method
+	if (lineContents == "") ; try again with different method
 		SendInput {End}+{Home}+{Home}
-	return clip
+	return lineContents
 }
 
 ; ---------------------------------------------------------------------------------------
@@ -203,15 +176,7 @@ _highlightLineUp()
 
 deleteLine:
 {
-	;~ clipboardStorage := Clipboard
-	;~ Clipboard := ""
-
-	;~ gosub _highlightLineUp
-
-	;~ ; Delete highlighted line
-	;~ onFirstLine := ! InStr(Clipboard, "`n")
-
-	clip := gethighlightedContents()
+	clip := getHighlightedContents()
 	onFirstLine := ! InStr(Clipboard, "`n")
 
 	if (onFirstLine)
@@ -219,7 +184,6 @@ deleteLine:
 	else
 		SendInput +{End}{BackSpace}{Right}
 
-	;~ Clipboard := clipboardStorage
 	return
 }
 
@@ -236,9 +200,6 @@ highlightLine(direction)
 _highlightLine(direction)
 {
 	clipboardStorage := Clipboard
-
-	;~ gosub _highlightLineUp
-	;~ notOnFirstLine := InStr(Clipboard, "`n")
 
 	clip := _highlightLineUp()
 	notOnFirstLine := InStr(clip, "`n")
@@ -283,31 +244,17 @@ copy:
 	if (key == "c")
 	{
 		SendInput +{End}
-
-		;~ ; and remember to change error handling for callers!
-		;~ Clipboard := ""
-		;~ Sleep % highlightWaitTime
-		;~ SendInput ^c
-		;~ ClipWait % clipWaitTime
-
-		;~ startingPosition := StrLen(Clipboard)
-		clip := gethighlightedContents()
+		clip := getHighlightedContents()
 		startingPosition := StrLen(clip)
 
 		_highlightLine("Left")
-
-		;~ Clipboard := ""
-		;~ Sleep % highlightWaitTime
-		;~ SendInput ^c
-		;~ ClipWait % clipWaitTime
-		Clipboard := gethighlightedContents()
+		Clipboard := getHighlightedContents()
 
 		SendInput {End}
 		Loop % startingPosition
 			SendInput {Left}
 	}
 
-	;Clipboard := clipboardStorage ; Only return it back to user on errors!
 	return
 }
 
@@ -391,18 +338,11 @@ highlightInner:
 	; found reliably
 	if (lPosition.row == 0 && rPosition.row > 0)
 	{
-		;~ Clipboard := ""
-		;~ SendInput +{End}
-		;~ Sleep % highlightWaitTime
-		;~ SendInput ^c
-		;~ ClipWait % clipWaitTime
-		;~ if (ErrorLevel == 0)
 		SendInput +{End}
-		clip := gethighlightedContents()
+		clip := getHighlightedContents()
 		if (clip != "")
 		{
 			lOffset := lPosition.column
-			;~ lPosition.column += StrLen(Clipboard)
 			lPosition.column += StrLen(clip)
 			SendInput {Left} ; get back
 		}
@@ -438,7 +378,6 @@ highlightInnerFinish:
 
 	if (InStr(A_ThisHotkey, "Insert"))
 		SendInput {Insert}
-	;~ Clipboard := clipboardStorage
 	return
 
 	; -------------------------------------------------
@@ -470,17 +409,13 @@ highlightInnerFinish:
 	{
 		global rowsToAnalyze
 		global inputtedChar
-		global verticalDirection
-		;~ Clipboard := ""
-		;~ clip := ""
+		global verticalDirection ; does this need to be declared here?
+
 		verticalDirection := direction == "Left" ? "Up" : "Down"
 		Loop %rowsToAnalyze%
 			SendInput +{%verticalDirection%}
-		;~ Sleep % highlightWaitTime
-		;~ SendInput ^c
-		;~ ClipWait % clipWaitTime
-		;~ if (ErrorLevel == 1 && alreadyScanned == 0) ; we're on 1st/last line and using Notepad.exe
-		clip := gethighlightedContents()
+		clip := getHighlightedContents()
+
 		if (clip == "" && alreadyScanned == 0) ; we're on 1st/last line on Notepad.exe
 		{
 			; Try scanning the current line
@@ -488,16 +423,8 @@ highlightInnerFinish:
 				SendInput +{Home}
 			else
 				SendInput +{End}
-			;~ Sleep % highlightWaitTime
-			;~ SendInput ^c
-			;~ ClipWait % clipWaitTime
-			;~ clip := Clipboard
-			clip := gethighlightedContents()
+			clip := getHighlightedContents()
 		}
-		;~ else if (direction == "Left") ; HERE MIGHT BE A BUG <----------------------------
-			;~ clip := SubStr(Clipboard, 1, StrLen(Clipboard) - alreadyScanned)
-		;~ else
-			;~ clip := SubStr(Clipboard, alreadyScanned + 1)
 		else if (direction == "Left")
 			clip := SubStr(clip, 1, StrLen(clip) - alreadyScanned)
 		else
