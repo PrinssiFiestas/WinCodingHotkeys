@@ -42,7 +42,7 @@ Loop Parse, arrowList, " "
 ~Insert & Left::
 ~Insert & Right::
 ~Insert & Up::
-~Insert & Down::gosub highlightLine
+~Insert & Down::highlightLine(StrSplit(A_ThisHotkey, " & ")[2])
 
 ; Delete line in any editor
 ~Delete & d::gosub deleteLine
@@ -65,6 +65,8 @@ return ; -----------------------------------------------------------------------
 #SingleInstance force
 #Persistent
 #Warn
+
+global clipboardStorage
 
 repeatArrows:
 {
@@ -148,7 +150,7 @@ scroll(direction)
 
 ; Highlight full line including newline from previous line
 ; Highlighted line is copied so checking if first line can be done by InStr(Clipboard, "´n")
-; Remember to store Clipboard before use!
+; Store Clipboard before use!
 highlightLineUp:
 {
 	Clipboard := ""
@@ -194,26 +196,31 @@ deleteLine:
 ; ---------------------------------------------------------------------------------------
 ; ---------------------------------------------------------------------------------------
 
-highlightLine:
+highlightLine(direction)
+{
+	_highlightLine(direction)
+	SendInput {Insert} ; revert inital press
+	return
+}
+
+_highlightLine(direction)
 {
 	clipboardStorage := Clipboard
 
 	gosub highlightLineUp
 	notOnFirstLine := InStr(Clipboard, "`n")
 
-	arrow := StrSplit(A_ThisHotkey, " & ")[2]
-	if (arrow == "Left" && notOnFirstLine)
+	if (direction == "Left" && notOnFirstLine)
 		SendInput +{Right}
-	else if (arrow == "Right" && notOnFirstLine)
+	else if (direction == "Right" && notOnFirstLine)
 		SendInput {End}{Right}+{End}
-	else if (arrow == "Down" && notOnFirstLine)
+	else if (direction == "Down" && notOnFirstLine)
 		SendInput {End}{Right}+{End}+{Right}
-	else if (arrow == "Right")
+	else if (direction == "Right")
 		SendInput {Left}+{End}
-	else if (arrow == "Down")
+	else if (direction == "Down")
 		SendInput {Left}+{End}+{Right}
 
-	SendInput {Insert} ; revert inital press
 	Clipboard := clipboardStorage
 	return
 }
