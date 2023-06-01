@@ -77,13 +77,13 @@ return ; -----------------------------------------------------------------------
 
 getHighlightedContents()
 {
-	clipboardStorage := Clipboard
+	clipboardStorage := ClipboardAll
 	Clipboard := ""
 	Sleep % highlightWaitTime
 	SendInput ^c
 	ClipWait % clipWaitTime
 	contents := Clipboard
-	Clipboard := clipboardStorage
+	ClipboardAll := clipboardStorage
 	return contents
 }
 
