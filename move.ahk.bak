@@ -4,7 +4,11 @@
 ;
 ; ---------------------------------------------------------------------------------------
 
+; Increasing this might increase speed for multi-line operations, but may introduce
+; pointless scrolling
 global rowsToAnalyze := 5
+
+; Increasing these might help if hotkeys fail sometimes
 global highlightWaitTime := 1
 global clipWaitTime := 0.01
 
@@ -29,7 +33,7 @@ Loop Parse, arrowList, " "
 ~Delete & i UP::
 ~Insert & i UP::
 ~Delete & a UP::
-~Insert & a UP::gosub highlightInner
+~Insert & a UP::highlightInner()
 
 ; Find character in line
 ; Wait for character input, find it in current line, highlight to it and move cursor to it
@@ -245,11 +249,21 @@ copy:
 		startingPosition := StrLen(lineEnd)
 
 		_highlightLine("Left")
-		Clipboard := getHighlightedContents()
+		line := getHighlightedContents()
+		if (line != "")
+			Clipboard := line
 
 		SendInput {End}
 		Loop % startingPosition
 			SendInput {Left}
+	}
+	else if (key == "x")
+	{
+		_highlightLine("Left")
+		line := getHighlightedContents()
+		if (line != "")
+			Clipboard := line
+		SendInput {Delete}{Backspace}
 	}
 
 	return
@@ -258,11 +272,38 @@ copy:
 ; ---------------------------------------------------------------------------------------
 ; ---------------------------------------------------------------------------------------
 
-highlightInner:
+class Position
 {
-	lChar := ""
-	rChar := ""
-	Input inputtedChar, L1 ; ADD ESCAPE <-----------
+	row := 0 ; relative to cursor
+
+	; Columns are relative to cursor position when rChar and lChar are on the same
+	; line. Otherwise lChar column is relative to line end and rChar is relative to
+	; line start. These cases have to be handled separately to increase speed by
+	; eliminating the need for redundant scan for line position or always moving
+	; relative to cursor position.
+	column := 0
+
+	found := false
+}
+
+highlightInner()
+{
+	positions := _highlightInner()
+	if ((!positions[1].found) || (!positions[2].found))
+		return
+
+	if      (InStr(A_ThisHotkey, "Insert"))
+		SendInput {Insert}
+	else if (InStr(A_ThisHotkey, "Delete"))
+		SendInput {Delete}
+	return
+}
+
+_highlightInner()
+{
+	global lChar := ""
+	global rChar := ""
+	Input inputtedChar, L1
 
 	; Wait for intrusive modifiers to be lifted
 	while (GetKeyState("Ctrl") || GetKeyState("Alt") || GetKeyState("AltGr") || GetKeyState("Shift"))
@@ -277,19 +318,6 @@ highlightInner:
 
 	; --------------------------------------------
 
-	class Position
-	{
-		row := 0 ; relative to cursor
-
-		; Columns are relative to cursor position when rChar and lChar are on the same
-		; line. Otherwise lChar column is relative to line end and rChar is relative to
-		; line start. These cases have to be handled separately to increase speed by
-		; eliminating the need for redundant scan for line position or always moving
-		; relative to cursor position.
-		column := 0
-
-		found := false
-	}
 	lPosition := new Position
 	rPosition := new Position
 
@@ -305,7 +333,8 @@ highlightInner:
 
 	rPosition := _findMatching("Right")
 
-	; There's a bug somewhere which makes _findMatching() to always find rChar at the end of file
+	; There's a bug somewhere which makes _findMatching() to always find rChar at the end
+	; of file so !rPosition.found is always false, but don't remove it! Fix the bug!
 	if ( ! rPosition.found)
 	{
 		MsgBox Couldn't find matching %rChar%!
@@ -366,121 +395,114 @@ highlightInner:
 	Loop % lPosition.column
 		SendInput +{Left}
 
-	if (InStr(A_ThisHotkey, "Delete"))
-		SendInput {Delete}
-
 highlightInnerFinish:
-
-	if (InStr(A_ThisHotkey, "Insert"))
-		SendInput {Insert}
-	return
-
-	; -------------------------------------------------
-	;	Helpers
-
-	_findMatching(ByRef direction)
-	{
-		matchCount := { l: 0, r: 0 }
-		alreadyScanned := 0
-		position := new Position
-		Loop
-		{
-			clipToScan := _getClipToAnalyze(direction, alreadyScanned)
-			if (clipToScan.contents == "")
-				break ; return with position.found = false
-			alreadyScanned += clipToScan.length
-
-			_scanClip(clipToScan, position, matchCount, direction)
-
-			if (position.found)
-				break
-		}
-		if (InStr(A_ThisHotkey, " i "))
-			position.column--
-		return position
-	}
-
-	_getClipToAnalyze(ByRef direction, alreadyScanned)
-	{
-		global rowsToAnalyze
-		global inputtedChar
-		global verticalDirection ; does this need to be declared here?
-
-		verticalDirection := direction == "Left" ? "Up" : "Down"
-		Loop %rowsToAnalyze%
-			SendInput +{%verticalDirection%}
-		rows := getHighlightedContents()
-
-		if (rows == "" && alreadyScanned == 0) ; we're on 1st/last line on Notepad.exe
-		{
-			; Try scanning the current line
-			if (direction == "Left")
-				SendInput +{Home}
-			else
-				SendInput +{End}
-			clip := getHighlightedContents()
-		}
-		else if (direction == "Left")
-			clip := SubStr(rows, 1, StrLen(rows) - alreadyScanned)
-		else
-			clip := SubStr(rows, alreadyScanned + 1)
-
-		return { contents: clip, length: StrLen(clip) }
-	}
-
-	_scanClip(ByRef clipToScan, ByRef position, ByRef matches, ByRef direction)
-	{
-		global lChar, rChar
-		char := ""
-		clipLength := clipToScan.length
-		Loop %clipLength%
-		{
-			; Get char
-			if (direction == "Left")
-				char := SubStr(clipToScan.contents, 1 - A_Index, 1)
-			else
-				char := SubStr(clipToScan.contents, A_Index, 1)
-
-			if (char == lChar)
-				matches.l++
-			if (char == rChar)
-				matches.r++
-
-			; ----------------------------------------
-
-			if (char != "`r")
-				position.column++
-			if (char == "`n")
-			{
-				position.row++
-				position.column := 0
-			}
-
-			; --------------------------------------
-
-			if (_checkCounts(matches, direction) == "LeftMatch" && direction == "Left")
-			{
-				position.found := true
-				return
-			}
-			else if (_checkCounts(matches, direction) == "RightMatch" && direction == "Right")
-			{
-				position.found := true
-				return
-			}
-		}
-		position.found := false
-		return
-	}
-
-	_checkCounts(counts, ByRef direction)
-	{
-		global lChar, rChar
-		if (direction == "Left" && (counts.l > counts.r || (rChar == lChar && counts.l > 0)))
-			return "LeftMatch"
-		else if (direction == "Right" && (counts.r > counts.l || (rChar == lChar && counts.r > 0)))
-			return "RightMatch"
-		else
-			return ""
-	}
+	return [lPosition, rPosition]
 }
+
+; -------------------------------------------------
+;	Helpers for highlightInner
+
+_findMatching(ByRef direction)
+{
+	matchCount := { l: 0, r: 0 }
+	alreadyScanned := 0
+	position := new Position
+	Loop
+	{
+		clipToScan := _getClipToAnalyze(direction, alreadyScanned)
+		if (clipToScan.contents == "")
+			break ; return with position.found = false
+		alreadyScanned += clipToScan.length
+
+		_scanClip(clipToScan, position, matchCount, direction)
+
+		if (position.found)
+			break
+	}
+	if (InStr(A_ThisHotkey, " i "))
+		position.column--
+	return position
+}
+
+_getClipToAnalyze(ByRef direction, alreadyScanned)
+{
+	global rowsToAnalyze
+
+	verticalDirection := direction == "Left" ? "Up" : "Down"
+	Loop %rowsToAnalyze%
+		SendInput +{%verticalDirection%}
+	rows := getHighlightedContents()
+
+	if (rows == "" && alreadyScanned == 0) ; we're on 1st/last line on Notepad.exe
+	{
+		; Try scanning the current line
+		if (direction == "Left")
+			SendInput +{Home}
+		else
+			SendInput +{End}
+		clip := getHighlightedContents()
+	}
+	else if (direction == "Left")
+		clip := SubStr(rows, 1, StrLen(rows) - alreadyScanned)
+	else
+		clip := SubStr(rows, alreadyScanned + 1)
+
+	return { contents: clip, length: StrLen(clip) }
+}
+
+_scanClip(ByRef clipToScan, ByRef position, ByRef matches, ByRef direction)
+{
+	global lChar, rChar
+	char := ""
+	clipLength := clipToScan.length
+	Loop %clipLength%
+	{
+		; Get char
+		if (direction == "Left")
+			char := SubStr(clipToScan.contents, 1 - A_Index, 1)
+		else
+			char := SubStr(clipToScan.contents, A_Index, 1)
+
+		if (char == lChar)
+			matches.l++
+		if (char == rChar)
+			matches.r++
+
+		; ----------------------------------------
+
+		if (char != "`r")
+			position.column++
+		if (char == "`n")
+		{
+			position.row++
+			position.column := 0
+		}
+
+		; --------------------------------------
+
+		if (_checkCounts(matches, direction) == "LeftMatch" && direction == "Left")
+		{
+			position.found := true
+			return
+		}
+		else if (_checkCounts(matches, direction) == "RightMatch" && direction == "Right")
+		{
+			position.found := true
+			return
+		}
+	}
+	position.found := false
+	return
+}
+
+_checkCounts(counts, ByRef direction)
+{
+	global lChar, rChar
+	if (direction == "Left" && (counts.l > counts.r || (rChar == lChar && counts.l > 0)))
+		return "LeftMatch"
+	else if (direction == "Right" && (counts.r > counts.l || (rChar == lChar && counts.r > 0)))
+		return "RightMatch"
+	else
+		return ""
+}
+
