@@ -42,9 +42,8 @@ Loop Parse, arrowList, " "
 ~Left & t UP::
 ~Right & t UP::gosub findCharInLine
 
-; Copy or cut
-; Press 'i', 'a', 'f' or 't' while holding 'Ctrl' for combined function or press twice to
-; copy/cut line
+; Copy or cut line
+; Press ^c or ^x twice
 ~^~c UP::
 ~^~x UP::gosub copy
 
@@ -226,7 +225,7 @@ _highlightLine(direction)
 copy:
 {
 	key := ""
-	keylist := "i a f t c x"
+	keylist := "i a c x"
 
 	; Poll for follow-up key
 	while (GetKeyState("Ctrl"))

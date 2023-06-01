@@ -418,8 +418,6 @@ _findMatching(ByRef direction, isInclusive)
 		if (position.found)
 			break
 	}
-	;~ if (InStr(A_ThisHotkey, " i "))
-		;~ position.column--
 	if ( ! isInclusive)
 		position.column--
 	return position
