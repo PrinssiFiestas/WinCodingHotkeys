@@ -103,7 +103,7 @@ repeatArrows:
 			scroll(arrow)
 		else if (GetKeyState("Ctrl"))
 			SendInput ^{%arrow%}
-		else if (GetKeyState("Shift"))
+		else if (GetKeyState("Sh}ft"))
 			SendInput +{%arrow%}
 		else if (GetKeyState("Alt"))
 			SendInput !{%arrow%}
@@ -288,12 +288,12 @@ class Position
 highlightInner(isInclusive)
 {
 	positions := _highlightInner(isInclusive)
+
+	if (InStr(A_ThisHotkey, "Insert"))
+		SendInput {Insert}
 	if ((!positions[1].found) || (!positions[2].found))
 		return
-
-	if      (InStr(A_ThisHotkey, "Insert"))
-		SendInput {Insert}
-	else if (InStr(A_ThisHotkey, "Delete"))
+	if (InStr(A_ThisHotkey, "Delete"))
 		SendInput {Delete}
 	return
 }

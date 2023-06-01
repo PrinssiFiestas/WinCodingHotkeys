@@ -42,9 +42,8 @@ Loop Parse, arrowList, " "
 ~Left & t UP::
 ~Right & t UP::gosub findCharInLine
 
-; Copy or cut
-; Press 'i', 'a', 'f' or 't' while holding 'Ctrl' for combined function or press twice to
-; copy/cut line
+; Copy or cut line
+; Press ^c or ^x twice
 ~^~c UP::
 ~^~x UP::gosub copy
 
@@ -104,7 +103,7 @@ repeatArrows:
 			scroll(arrow)
 		else if (GetKeyState("Ctrl"))
 			SendInput ^{%arrow%}
-		else if (GetKeyState("Shift"))
+		else if (GetKeyState("Sh}ft"))
 			SendInput +{%arrow%}
 		else if (GetKeyState("Alt"))
 			SendInput !{%arrow%}
@@ -226,7 +225,7 @@ _highlightLine(direction)
 copy:
 {
 	key := ""
-	keylist := "i a f t c x"
+	keylist := "i a c x"
 
 	; Poll for follow-up key
 	while (GetKeyState("Ctrl"))
@@ -289,12 +288,12 @@ class Position
 highlightInner(isInclusive)
 {
 	positions := _highlightInner(isInclusive)
+
+	if (InStr(A_ThisHotkey, "Insert"))
+		SendInput {Insert}
 	if ((!positions[1].found) || (!positions[2].found))
 		return
-
-	if      (InStr(A_ThisHotkey, "Insert"))
-		SendInput {Insert}
-	else if (InStr(A_ThisHotkey, "Delete"))
+	if (InStr(A_ThisHotkey, "Delete"))
 		SendInput {Delete}
 	return
 }
