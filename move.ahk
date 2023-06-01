@@ -20,7 +20,7 @@ global clipWaitTime := 0.01
 
 ; ~arrow & number:: Repeat arrow key presses number of times
 arrowList := "Left Right Up Down"
-numberList := "1 2 3 4 5 6 7 8 9 0"
+numberList := "1 2 3 4 5 6 7 8 9 0 Numpad1 Numpad2 Numpad3 Numpad4 Numpad5 Numpad6 Numpad7 Numpad8 Numpad9 Numpad0"
 Loop Parse, arrowList, " "
 {
 	arrow = %A_LoopField%
@@ -83,7 +83,7 @@ getHighlightedContents()
 	SendInput ^c
 	ClipWait % clipWaitTime
 	contents := Clipboard
-	ClipboardAll := clipboardStorage
+	Clipboard := clipboardStorage
 	return contents
 }
 
@@ -93,7 +93,7 @@ repeatArrows:
 {
 	hotkeyElements := StrSplit(A_ThisHotkey, " & ")
 	arrow := SubStr(hotkeyElements[1], 2)
-	number := SubStr(hotkeyElements[2], 1, 1)
+	number := SubStr(A_ThisHotkey, 0, 1)
 	if (number == 0)
 		number := 10
 
