@@ -31,9 +31,9 @@ Loop Parse, arrowList, " "
 ; Delete inner or highlight inner
 ; Equivalent for Vim's "di". Only highlights with insert
 ~Delete & i UP::
-~Insert & i UP::
+~Insert & i UP::highlightInner(false)
 ~Delete & a UP::
-~Insert & a UP::highlightInner()
+~Insert & a UP::highlightInner(true)
 
 ; Find character in line
 ; Wait for character input, find it in current line, highlight to it and move cursor to it
@@ -286,9 +286,9 @@ class Position
 	found := false
 }
 
-highlightInner()
+highlightInner(isInclusive)
 {
-	positions := _highlightInner()
+	positions := _highlightInner(isInclusive)
 	if ((!positions[1].found) || (!positions[2].found))
 		return
 
@@ -299,7 +299,7 @@ highlightInner()
 	return
 }
 
-_highlightInner()
+_highlightInner(isInclusive)
 {
 	global lChar := ""
 	global rChar := ""
@@ -321,24 +321,24 @@ _highlightInner()
 	lPosition := new Position
 	rPosition := new Position
 
-	lPosition := _findMatching("Left")
+	lPosition := _findMatching("Left", isInclusive)
 	if ( ! lPosition.found)
 	{
 		MsgBox Couldn't find valid %lChar%!
-		goto highlightInnerFinish
+		return [lPosition, rPosition]
 	}
 
 	; Get back to starting position
 	SendInput {Right}
 
-	rPosition := _findMatching("Right")
+	rPosition := _findMatching("Right", isInclusive)
 
 	; There's a bug somewhere which makes _findMatching() to always find rChar at the end
 	; of file so !rPosition.found is always false, but don't remove it! Fix the bug!
 	if ( ! rPosition.found)
 	{
 		MsgBox Couldn't find matching %rChar%!
-		goto highlightInnerFinish
+		return [lPosition, rPosition]
 	}
 
 	; Get back to starting position
@@ -354,7 +354,7 @@ _highlightInner()
 			SendInput {Right}
 		Loop % rPosition.column + lPosition.column
 			SendInput +{Left}
-		goto highlightInnerFinish
+		return [lPosition, rPosition]
 	}
 
 	; When rChar is on different line than rChar and lPosition is on the first line, then
@@ -395,14 +395,13 @@ _highlightInner()
 	Loop % lPosition.column
 		SendInput +{Left}
 
-highlightInnerFinish:
 	return [lPosition, rPosition]
 }
 
 ; -------------------------------------------------
 ;	Helpers for highlightInner
 
-_findMatching(ByRef direction)
+_findMatching(ByRef direction, isInclusive)
 {
 	matchCount := { l: 0, r: 0 }
 	alreadyScanned := 0
@@ -419,7 +418,9 @@ _findMatching(ByRef direction)
 		if (position.found)
 			break
 	}
-	if (InStr(A_ThisHotkey, " i "))
+	;~ if (InStr(A_ThisHotkey, " i "))
+		;~ position.column--
+	if ( ! isInclusive)
 		position.column--
 	return position
 }
