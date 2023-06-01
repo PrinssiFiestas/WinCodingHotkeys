@@ -93,7 +93,6 @@ repeatArrows:
 {
 	hotkeyElements := StrSplit(A_ThisHotkey, " & ")
 	arrow := SubStr(hotkeyElements[1], 2)
-	;number := SubStr(hotkeyElements[2], 1, 1)
 	number := SubStr(A_ThisHotkey, 0, 1)
 	if (number == 0)
 		number := 10

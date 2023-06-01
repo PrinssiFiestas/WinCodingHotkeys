@@ -103,7 +103,7 @@ repeatArrows:
 			scroll(arrow)
 		else if (GetKeyState("Ctrl"))
 			SendInput ^{%arrow%}
-		else if (GetKeyState("Sh}ft"))
+		else if (GetKeyState("Shift"))
 			SendInput +{%arrow%}
 		else if (GetKeyState("Alt"))
 			SendInput !{%arrow%}
@@ -225,13 +225,14 @@ _highlightLine(direction)
 copy:
 {
 	key := ""
-	keylist := "i a c x"
+	followUpKeylist := "c x"
+	hotkeyChar := SubStr(A_ThisHotkey, 0, 1) ; x or c
 
 	; Poll for follow-up key
 	while (GetKeyState("Ctrl"))
 	{
 		Sleep 1
-		Loop Parse, keylist, " "
+		Loop Parse, followUpKeylist, " "
 		{
 			if (GetKeyState(A_LoopField))
 			{
