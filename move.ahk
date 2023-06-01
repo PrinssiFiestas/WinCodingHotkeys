@@ -48,10 +48,11 @@ Loop Parse, arrowList, " "
 ~^~x UP::gosub copy
 
 ; Highlight line
-~Insert & Left::
-~Insert & Right::
-~Insert & Up::
-~Insert & Down::highlightLine(StrSplit(A_ThisHotkey, " & ")[2])
+; Multiple lines can be highlighted by pressing number keys while holding Insert and arrow
+Insert & Left::
+Insert & Right::
+Insert & Up::
+Insert & Down::highlightLine(StrSplit(A_ThisHotkey, " & ")[2])
 
 ; Delete line
 ~Delete & d::gosub deleteLine
@@ -196,6 +197,10 @@ deleteLine:
 highlightLine(direction)
 {
 	_highlightLine(direction)
+	SendInput {Shift DOWN}
+	while (getKeyState("Insert"))
+		sleep 1
+	SendInput {Shift UP}
 	SendInput {Insert} ; revert inital press
 	return
 }

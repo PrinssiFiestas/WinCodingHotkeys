@@ -48,10 +48,10 @@ Loop Parse, arrowList, " "
 ~^~x UP::gosub copy
 
 ; Highlight line
-~Insert & Left::
-~Insert & Right::
-~Insert & Up::
-~Insert & Down::highlightLine(StrSplit(A_ThisHotkey, " & ")[2])
+Insert & Left::
+Insert & Right::
+Insert & Up::
+Insert & Down::highlightLine(StrSplit(A_ThisHotkey, " & ")[2])
 
 ; Delete line
 ~Delete & d::gosub deleteLine
@@ -103,7 +103,7 @@ repeatArrows:
 			scroll(arrow)
 		else if (GetKeyState("Ctrl"))
 			SendInput ^{%arrow%}
-		else if (GetKeyState("Sh}ft"))
+		else if (GetKeyState("Shift"))
 			SendInput +{%arrow%}
 		else if (GetKeyState("Alt"))
 			SendInput !{%arrow%}
@@ -196,6 +196,10 @@ deleteLine:
 highlightLine(direction)
 {
 	_highlightLine(direction)
+	SendInput {Shift DOWN}
+	while (getKeyState("Insert"))
+		sleep 1
+	SendInput {Shift UP}
 	SendInput {Insert} ; revert inital press
 	return
 }
@@ -225,13 +229,14 @@ _highlightLine(direction)
 copy:
 {
 	key := ""
-	keylist := "i a c x"
+	followUpKeylist := "c x"
+	hotkeyChar := SubStr(A_ThisHotkey, 0, 1) ; x or c
 
 	; Poll for follow-up key
 	while (GetKeyState("Ctrl"))
 	{
 		Sleep 1
-		Loop Parse, keylist, " "
+		Loop Parse, followUpKeylist, " "
 		{
 			if (GetKeyState(A_LoopField))
 			{
