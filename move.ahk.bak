@@ -66,6 +66,10 @@ RAlt & Up::scroll("Up")
 RAlt & Down::scroll("Down")
 
 ; Paste and match indentation
+; If indentation style (tabs vs spaces) of source document doesn't match the style of
+; destination document then clipboard contents will be modified to match destination style.
+; Note that indentation style can't be auto detected if destination line has no indentation.
+; In that case it will be the one detected last.
 <^>!v::
 Ralt & v::gosub superpaste
 
@@ -127,33 +131,33 @@ superpaste:
 	if (currentLineIndentationLevel > 0)
 		currentIndentationChar := SubStr(currentLine, 1, 1)
 	else
-		currentIndentationChar := "`t"
-		;currentIndentationChar := "undetected"
+		currentIndentationChar := "undetected"
+		;currentIndentationChar := "`t"
 
 	clipboardIndentationLevel := 999999
 	clipboardLines := StrSplit(Clipboard, "`n")
 	for i, line in clipboardLines
 	{
 		clipboardLineIndentationLevel := getIndentationLevel(line)
-		if (clipboardLineIndentationLevel > 0)
+
+		if (clipboardLineIndentationLevel > 0 && currentIndentationChar != "undetected")
 		{
 			clipboardIndentationChar := SubStr(line, 1, 1)
 
 			; Replace non-matching indentation characters
 			nonMatchingIndentation := clipboardIndentationChar != currentIndentationChar
-			;if (nonMatchingIndentation && currentIndentationChar != "undetected")
-			;~ if (nonMatchingIndentation)
-			;~ {
-				;~ clipboardLines[i] := SubStr(line, clipboardLineIndentationLevel + 1)
+			if (nonMatchingIndentation)
+			{
+				clipboardLines[i] := SubStr(line, clipboardLineIndentationLevel + 1)
 
-				;~ if (currentIndentationChar == "`t")
-					;~ clipboardLineIndentationLevel /= 4
-				;~ else
-					;~ clipboardLineIndentationLevel *= 4
+				if (currentIndentationChar == "`t")
+					clipboardLineIndentationLevel /= 4
+				else
+					clipboardLineIndentationLevel *= 4
 
-				;~ Loop % clipboardLineIndentationLevel
-					;~ clipboardLines[i] := currentIndentationChar . clipboardLines[i]
-			;~ }
+				Loop % clipboardLineIndentationLevel
+					clipboardLines[i] := currentIndentationChar . clipboardLines[i]
+			}
 		}
 
 		if (clipboardLineIndentationLevel < clipboardIndentationLevel)
