@@ -96,11 +96,12 @@ getHighlightedContents()
 
 superpaste:
 {
-	; TODO: Check if user already highlighted stuff so it can be replaced
-	;getHighlightedContents()
-
 	if (Clipboard == "")
 		return
+
+	currentHighlight := getHighlightedContents()
+	if (currentHighlight != "")
+		SendInput {Backspace}
 
 	SendInput +{Up}+{End}+{Right}
 	currentLine := getHighlightedContents()
@@ -133,9 +134,7 @@ superpaste:
 			clipboardIndentationLevel := clipboardLineIndentationLevel
 	}
 
-	MsgBox % clipboardIndentationLevel
-
-	clipboardStorage := Clipboard
+	clipboardContainer := Clipboard
 	Clipboard := ""
 
 	; Modify clipboard to match indentation
@@ -157,7 +156,7 @@ superpaste:
 
 	SendInput ^v
 	Sleep 100
-	Clipboard := clipboardStorage
+	Clipboard := clipboardContainer
 	return
 }
 

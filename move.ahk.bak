@@ -96,13 +96,12 @@ getHighlightedContents()
 
 superpaste:
 {
-	; TODO: Check if user already highlighted stuff so it can be replaced
-	;getHighlightedContents() ; etc.
-
 	if (Clipboard == "")
 		return
 
-	;_highlightLine("Left") ; TODO : change this! We don't want to highlight whole line
+	currentHighlight := getHighlightedContents()
+	if (currentHighlight != "")
+		SendInput {Backspace}
 
 	SendInput +{Up}+{End}+{Right}
 	currentLine := getHighlightedContents()
@@ -111,10 +110,7 @@ superpaste:
 		SendInput +{Home}+{Home}
 		currentLine := getHighlightedContents()
 	}
-
-	;MsgBox here
-	SendInput {Right}
-	;MsgBox now here
+	SendInput {Right} ; Get back to original cursor position
 
 	getIndentationLevel(line)
 	{
@@ -138,8 +134,6 @@ superpaste:
 			clipboardIndentationLevel := clipboardLineIndentationLevel
 	}
 
-	MsgBox % clipboardIndentationLevel
-
 	clipboardStorage := Clipboard
 	Clipboard := ""
 
@@ -148,7 +142,7 @@ superpaste:
 	for i, line in clipboardLines
 	{
 		; First line has to be unindented to be correctly pasted at cursor position
-		if (i == 1 && getIndentationLevel(line) > clipboardIndentationLevel) ; offset := getIndentationLevel(line) - clipboardIndentationLevel
+		if (i == 1 && getIndentationLevel(line) > clipboardIndentationLevel)
 			clipboardLines[i] := SubStr(line, clipboardIndentationLevel)
 		else if (i == 1)
 			clipboardLines[i] := SubStr(line, getIndentationLevel(line) + 1)
