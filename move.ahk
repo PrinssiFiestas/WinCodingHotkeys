@@ -107,15 +107,20 @@ superpaste:
 	if (currentHighlight != "")
 		SendInput {Backspace}
 
+	; Highlight line beginning
 	SendInput +{Up}+{End}+{Right}
 	currentLine := getHighlightedContents()
-	if (currentLine == "") ; First line on Notepad.exe
+
+	; Try again if first line on Notepad.exe or empty line
+	if (currentLine == "")
 	{
 		SendInput +{Home}+{Home}
 		currentLine := getHighlightedContents()
 	}
+
+	; Get back to original cursor position
 	if (currentLine != "")
-		SendInput {Right} ; Get back to original cursor position
+		SendInput {Right}
 
 	getIndentationLevel(line)
 	{
