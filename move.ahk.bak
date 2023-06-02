@@ -69,7 +69,7 @@ RAlt & Down::scroll("Down")
 ; If indentation style (tabs vs spaces) of source document doesn't match the style of
 ; destination document then clipboard contents will be modified to match destination style.
 ; Note that indentation style can't be auto detected if destination line has no indentation.
-; In that case it will be the one detected last.
+; In that case the indentation style of the source is retained.
 <^>!v::
 Ralt & v::gosub superpaste
 
@@ -132,7 +132,6 @@ superpaste:
 		currentIndentationChar := SubStr(currentLine, 1, 1)
 	else
 		currentIndentationChar := "undetected"
-		;currentIndentationChar := "`t"
 
 	clipboardIndentationLevel := 999999
 	clipboardLines := StrSplit(Clipboard, "`n")
@@ -181,11 +180,14 @@ superpaste:
 				clipboardLines[i] := "`t" . clipboardLines[i]
 		else
 			clipboardLines[i] := SubStr(clipboardLines[i], Abs(indentationDifference) + 1)
+		;Clipboard := Clipboard . clipboardLines[i] . "`n"
 		Clipboard := Clipboard . clipboardLines[i]
+		Clipboard := Clipboard . "`n"
 	}
+	Clipboard := SubStr(Clipboard, 1, StrLen(Clipboard) - 1)
 
 	SendInput ^v
-	Sleep 100
+	Sleep 50
 	Clipboard := clipboardContainer
 	return
 }
