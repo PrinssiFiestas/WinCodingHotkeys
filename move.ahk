@@ -123,13 +123,57 @@ superpaste:
 		return indentationLevel
 	}
 
+	;~ currentLineIndentationLevel := getIndentationLevel(currentLine)
+	;~ currentIndentationChar := SubStr(currentLine, 1, 1)
+	;~ if (currentIndentationChar == "")
+		;~ currentIndentationChar := "`t" ; TODO: change this to be user selectable or at least promt
 	currentLineIndentationLevel := getIndentationLevel(currentLine)
-	clipboardLines := StrSplit(Clipboard, "`n")
+	if (currentLineIndentationLevel > 0)
+		currentIndentationChar := SubStr(currentLine, 1, 1)
+	else
+		currentIndentationChar := "`t"
 
 	clipboardIndentationLevel := 999999
+	clipboardLines := StrSplit(Clipboard, "`n")
 	for i, line in clipboardLines
 	{
 		clipboardLineIndentationLevel := getIndentationLevel(line)
+
+		;if (clipboardIndentationLevel > 0)
+		if (clipboardLineIndentationLevel > 0)
+		{
+			clipboardIndentationChar := SubStr(line, 1, 1)
+
+			; Replace non-matching indentation characters
+			nonMatchingIndentation := clipboardIndentationChar != currentIndentationChar
+			;~ if (nonMatchingIndentation && currentIndentationChar == "`t")
+			;~ {
+				;~ clipboardLines[i] := SubStr(line, clipboardLineIndentationLevel + 1)
+				;~ clipboardLineIndentationLevel /= 4 ; TODO: change this also to be user selectable
+				;~ Loop % clipboardLineIndentationLevel
+					;~ clipboardLines[i] := "`t" . clipboardLines[i]
+			;~ }
+			;~ else if (nonMatchingIndentation && currentIndentationChar == " ")
+			;~ {
+				;~ clipboardLines[i] := SubStr(line, clipboardLineIndentationLevel + 1)
+				;~ clipboardLineIndentationLevel *= 4
+				;~ Loop % clipboardLineIndentationLevel
+					;~ clipboardLines[i] := " " . clipboardLines[i]
+			;~ }
+			if (nonMatchingIndentation) ; ----------------------------------------------
+			{
+				clipboardLines[i] := SubStr(line, clipboardLineIndentationLevel + 1)
+
+				if (currentIndentationChar == "`t")
+					clipboardLineIndentationLevel /= 4
+				else
+					clipboardLineIndentationLevel *= 4
+
+				Loop % clipboardLineIndentationLevel
+					clipboardLines[i] := currentIndentationChar . clipboardLines[i]
+			}
+		}
+
 		if (clipboardLineIndentationLevel < clipboardIndentationLevel)
 			clipboardIndentationLevel := clipboardLineIndentationLevel
 	}
@@ -148,7 +192,7 @@ superpaste:
 			clipboardLines[i] := SubStr(line, getIndentationLevel(line) + 1)
 		else if (indentationDifference > 0)
 			Loop % indentationDifference
-				clipboardLines[i] := "`t" . clipboardLines[i] ; TODO: check indentation character
+				clipboardLines[i] := "`t" . clipboardLines[i]
 		else
 			clipboardLines[i] := SubStr(clipboardLines[i], Abs(indentationDifference) + 1)
 		Clipboard := Clipboard . clipboardLines[i]
