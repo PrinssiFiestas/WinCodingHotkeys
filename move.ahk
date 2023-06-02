@@ -66,6 +66,10 @@ RAlt & Up::scroll("Up")
 RAlt & Down::scroll("Down")
 
 ; Paste and match indentation
+; If indentation style (tabs vs spaces) of source document doesn't match the style of
+; destination document then clipboard contents will be modified to match destination style.
+; Note that indentation style can't be auto detected if destination line has no indentation.
+; In that case it will be the one detected last.
 <^>!v::
 Ralt & v::gosub superpaste
 
@@ -134,6 +138,7 @@ superpaste:
 	for i, line in clipboardLines
 	{
 		clipboardLineIndentationLevel := getIndentationLevel(line)
+
 		if (clipboardLineIndentationLevel > 0)
 		{
 			clipboardIndentationChar := SubStr(line, 1, 1)
