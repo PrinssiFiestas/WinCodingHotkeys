@@ -65,6 +65,10 @@ RAlt & Up::scroll("Up")
 <^>!Down::
 RAlt & Down::scroll("Down")
 
+; Paste and match indentation
+<^>!v::
+Ralt & v::gosub superpaste
+
 return ; --------------------------------------------------------------------------------
 ;
 ;		IMPLEMENTATIONS
@@ -88,6 +92,76 @@ getHighlightedContents()
 	return contents
 }
 
+; ---------------------------------------------------------------------------------------
+
+superpaste:
+{
+	; TODO: Check if user already highlighted stuff so it can be replaced
+	;getHighlightedContents()
+
+	if (Clipboard == "")
+		return
+
+	SendInput +{Up}+{End}+{Right}
+	currentLine := getHighlightedContents()
+	if (currentLine == "") ; First line on Notepad.exe
+	{
+		SendInput +{Home}+{Home}
+		currentLine := getHighlightedContents()
+	}
+	SendInput {Right} ; Get back to original cursor position
+
+	getIndentationLevel(line)
+	{
+		firstNonBlankPosition := RegExMatch(line, "\S")
+		noNonBlankCharacters := firstNonBlankPosition == 0
+		if (noNonBlankCharacters)
+			indentationLevel := StrLen(line)
+		else
+			indentationLevel := firstNonBlankPosition - 1
+		return indentationLevel
+	}
+
+	currentLineIndentationLevel := getIndentationLevel(currentLine)
+	clipboardLines := StrSplit(Clipboard, "`n")
+
+	clipboardIndentationLevel := 999999
+	for i, line in clipboardLines
+	{
+		clipboardLineIndentationLevel := getIndentationLevel(line)
+		if (clipboardLineIndentationLevel < clipboardIndentationLevel)
+			clipboardIndentationLevel := clipboardLineIndentationLevel
+	}
+
+	MsgBox % clipboardIndentationLevel
+
+	clipboardStorage := Clipboard
+	Clipboard := ""
+
+	; Modify clipboard to match indentation
+	indentationDifference := currentLineIndentationLevel - clipboardIndentationLevel
+	for i, line in clipboardLines
+	{
+		; First line has to be unindented to be correctly pasted at cursor position
+		if (i == 1 && getIndentationLevel(line) > clipboardIndentationLevel)
+			clipboardLines[i] := SubStr(line, clipboardIndentationLevel)
+		else if (i == 1)
+			clipboardLines[i] := SubStr(line, getIndentationLevel(line) + 1)
+		else if (indentationDifference > 0)
+			Loop % indentationDifference
+				clipboardLines[i] := "`t" . clipboardLines[i] ; TODO: check indentation character
+		else
+			clipboardLines[i] := SubStr(clipboardLines[i], Abs(indentationDifference) + 1)
+		Clipboard := Clipboard . clipboardLines[i]
+	}
+
+	SendInput ^v
+	Sleep 100
+	Clipboard := clipboardStorage
+	return
+}
+
+; ---------------------------------------------------------------------------------------
 ; ---------------------------------------------------------------------------------------
 
 repeatArrows:
