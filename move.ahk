@@ -114,7 +114,8 @@ superpaste:
 		SendInput +{Home}+{Home}
 		currentLine := getHighlightedContents()
 	}
-	SendInput {Right} ; Get back to original cursor position
+	if (currentLine != "")
+		SendInput {Right} ; Get back to original cursor position
 
 	getIndentationLevel(line)
 	{

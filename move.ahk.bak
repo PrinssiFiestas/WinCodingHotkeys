@@ -180,10 +180,13 @@ superpaste:
 				clipboardLines[i] := "`t" . clipboardLines[i]
 		else
 			clipboardLines[i] := SubStr(clipboardLines[i], Abs(indentationDifference) + 1)
-		;Clipboard := Clipboard . clipboardLines[i] . "`n"
+
+		; Reassemble clipboard
 		Clipboard := Clipboard . clipboardLines[i]
+		; Add new line removed by StrSplit(Clipboard, "`n")
 		Clipboard := Clipboard . "`n"
 	}
+	; Get rid of stray new line
 	Clipboard := SubStr(Clipboard, 1, StrLen(Clipboard) - 1)
 
 	SendInput ^v
