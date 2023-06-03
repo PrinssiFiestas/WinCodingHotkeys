@@ -107,6 +107,7 @@ superpaste:
 	if (currentHighlight != "")
 		SendInput {Backspace}
 
+	; Highlight line beginning
 	SendInput +{Up}+{End}+{Right}
 	currentLine := getHighlightedContents()
 

@@ -12,6 +12,9 @@ global rowsToAnalyze := 5
 global highlightWaitTime := 1
 global clipWaitTime := 0.01
 
+; For superpaste indentation matching
+global tabWidth := 4
+
 ; ---------------------------------------------------------------------------------------
 ;
 ;		HOTKEYS
@@ -156,9 +159,9 @@ superpaste:
 				clipboardLines[i] := SubStr(line, clipboardLineIndentationLevel + 1)
 
 				if (currentIndentationChar == "`t")
-					clipboardLineIndentationLevel /= 4
+					clipboardLineIndentationLevel /= tabWidth
 				else
-					clipboardLineIndentationLevel *= 4
+					clipboardLineIndentationLevel *= tabWidth
 
 				Loop % clipboardLineIndentationLevel
 					clipboardLines[i] := currentIndentationChar . clipboardLines[i]
