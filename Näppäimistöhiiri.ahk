@@ -1,135 +1,79 @@
-﻿#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
-; #Warn  ; Enable warnings to assist with detecting common errors.
-; SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
+﻿#NoEnv
+#Warn
 #Persistent
 SetKeyDelay 100
 #SingleInstance, Force
 
 CoordMode, Mouse, Screen
 
-; Note that in Windows language settings you have set shift key to the key that turns caps off then this script wont work. I'll add an option for it here some day...
+; Note that in Windows language settings you have set shift key to the key that turns caps off then this script wont work.
 
 X := []
 Y := []
-sarakkeiden_maara := 12
-marginaalit := A_ScreenWidth/10
-yla_ala_vali := A_ScreenHeight/20
+n_columns := 12
+n_rows := 4
+margins_v := A_ScreenWidth/10
+margins_h := A_ScreenHeight/20
 
-siirtyma := A_ScreenWidth/20
-lyhyempi_siirtyma := A_ScreenWidth/100
-siirtyman_nopeus := 1
+displacement := A_ScreenWidth/20
+displacement_short := A_ScreenWidth/100
+displacement_speed := 1
 
-i := 0
-Loop %sarakkeiden_maara%
-{
-    X[i+1] := i * (A_ScreenWidth - marginaalit) / (sarakkeiden_maara-1) + marginaalit/2
-    i++
-}
-i := 0
-Loop 4
-{
-    Y[i+1] := i * (A_ScreenHeight - yla_ala_vali) / 3 + yla_ala_vali/2
-    i++
-}
+Loop % n_columns
+    X[A_Index] := (A_Index - 1) * (A_ScreenWidth - margins_v) / (n_columns - 1) + margins_v/2
+Loop % n_rows
+    Y[A_Index] := (A_Index - 1) * (A_ScreenHeight - margins_h) / (n_rows - 1) + margins_h/2
 
-HotkeyList := "1 2 3 4 5 6 7 8 9 0 + ´ q w e r t y u i o p å ¨ a s d f g h j k l ö ä ' < z x c v b n m , . - RShift"
-
-Loop, Parse, HotkeyList, " "
-{
-    Hotkey, CapsLock & %A_LoopField%, KoordinaattiLoikkari
-}
+scan_codes := "sc002 sc003 sc004 sc005 sc006 sc007 sc008 sc009 sc00A sc00B sc00C sc00D sc010 sc011 sc012 sc013 sc014 sc015 sc016 sc017 sc018 sc019 sc01A sc01B sc01E sc01F sc020 sc021 sc022 sc023 sc024 sc025 sc026 sc027 sc028 sc02B sc056 sc02C sc02D sc02E sc02F sc030 sc031 sc032 sc033 sc034 sc035 Rshift"
+Loop Parse, scan_codes, " "
+    Hotkey CapsLock & %A_LoopField%, mouseJump
 
 return
 
-KoordinaattiLoikkari:
+mouseJump:
 {
-    nappain := SubStr(A_ThisHotkey, 12)
-    nappain_num := Floor((InStr(HotkeyList, nappain)+1)/2)
-    x1 := X[ Mod(nappain_num, sarakkeiden_maara) + (Mod(nappain_num,sarakkeiden_maara)==0)*sarakkeiden_maara ]
-    y1 := Y[Floor( (nappain_num - Mod(nappain_num, sarakkeiden_maara))/sarakkeiden_maara + 1 - (Mod(nappain_num, sarakkeiden_maara)==0) )]
 
-    MouseMove, %x1%, %y1% ,2
+    key := StrSplit(A_ThisHotkey, " & ")[2]
+    scan_code_strlen := StrLen(StrSplit(scan_codes, " ")[1]) + 1 ; = 6
+
+    key_i := (InStr(scan_codes, key) - 1)/scan_code_strlen
+
+    x_i := Mod(key_i, n_columns) + 1
+    x_i := Floor(x_i) ; cast to int
+    x1 := X[x_i]
+
+    y_i := Mod(key_i/n_columns, n_rows) + 1
+    y_i := Floor(y_i)
+    y1 := Y[y_i]
+
+    MouseMove %x1%, %y1%, 2
     return
 }
 
 CapsLock & Up::
-{
-    MouseGetPos, x0, y0
-
-    if GetKeyState("LShift")
-    {
-        y0 -= lyhyempi_siirtyma
-    }
-    else
-    {
-        y0 -= siirtyma
-    }
-    MouseMove, %x0%, %y0%, %siirtyman_nopeus%
-    return
-}
-
 CapsLock & Down::
-{
-    MouseGetPos, x0, y0
-
-    if GetKeyState("LShift")
-    {
-        y0 += lyhyempi_siirtyma
-    }
-    else
-    {
-        y0 += siirtyma
-    }
-    MouseMove, %x0%, %y0%, %siirtyman_nopeus%
-    return
-}
-
 CapsLock & Left::
-{
-    MouseGetPos, x0, y0
-
-    if GetKeyState("LShift")
-    {
-        x0 -= lyhyempi_siirtyma
-    }
-    else
-    {
-        x0 -= siirtyma
-    }
-    MouseMove, %x0%, %y0%, %siirtyman_nopeus%
-    return
-}
-
 CapsLock & Right::
 {
     MouseGetPos, x0, y0
+    d := GetKeyState("LShift") ? displacement_short : displacement
+    direction := StrSplit(A_ThisHotkey, " & ")[2]
+    x_direction := direction == "Left" ? -1 : direction == "Right" ? 1 : 0
+    y_direction := direction == "Up"   ? -1 : direction == "Down"  ? 1 : 0
 
-    if GetKeyState("LShift")
-    {
-        x0 += lyhyempi_siirtyma
-    }
-    else
-    {
-        x0 += siirtyma
-    }
-    MouseMove, %x0%, %y0%, %siirtyman_nopeus%
+    x1 := x0 + x_direction * d
+    y1 := y0 + y_direction * d
+
+    MouseMove, %x1%, %y1%, %displacement_speed%
     return
 }
 
-CapsLock & Enter::
-{
-    Click
-    return
-}
-
-CapsLock & BackSpace::
-{
-    Click, R
-    return
-}
+CapsLock & Enter::Click
+CapsLock & BackSpace::Click, R
 
 CapsLock & Space::
 {
     MouseGetPos,,, hwnd
     WinActivate, ahk_id %hwnd%
+    return
 }
