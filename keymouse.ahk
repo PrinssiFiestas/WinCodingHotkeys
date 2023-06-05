@@ -41,7 +41,7 @@ Loop % n_rows
 ; ---------------------------------------------------------------------------------------
 
 ; Note that in Windows language settings if you have set shift key to the key that turns
-; caps off then this script wont work. Better alternative can be found in numpadcaps.ahk
+; caps off then this script wont work.
 
 ; CapsLock & AnyCharacterKey::Move mouse to physically matching key location
 scan_codes := "sc002 sc003 sc004 sc005 sc006 sc007 sc008 sc009 sc00A sc00B sc00C sc00D sc010 sc011 sc012 sc013 sc014 sc015 sc016 sc017 sc018 sc019 sc01A sc01B sc01E sc01F sc020 sc021 sc022 sc023 sc024 sc025 sc026 sc027 sc028 sc02B sc056 sc02C sc02D sc02E sc02F sc030 sc031 sc032 sc033 sc034 sc035 Rshift"
