@@ -34,8 +34,10 @@ Loop Parse, arrowList, " "
 ; Delete inner or highlight inner
 ; Equivalent for Vim's "di". Only highlights with insert
 #IfWinActive ahk_class Notepad++
+§ & i UP::
 ~Delete & i UP::
 ~Insert & i UP::highlightInner(false)
+§ & a UP::
 ~Delete & a UP::
 ~Insert & a UP::highlightInner(true)
 #IfWinActive
