@@ -33,10 +33,12 @@ Loop Parse, arrowList, " "
 
 ; Delete inner or highlight inner
 ; Equivalent for Vim's "di". Only highlights with insert
+#IfWinActive ahk_class Notepad++
 ~Delete & i UP::
 ~Insert & i UP::highlightInner(false)
 ~Delete & a UP::
 ~Insert & a UP::highlightInner(true)
+#IfWinActive
 
 ; Find character in line
 ; Wait for character input, find it in current line, highlight to it and move cursor to it
@@ -73,8 +75,10 @@ RAlt & Down::scroll("Down")
 ; destination document then clipboard contents will be modified to match destination style.
 ; Note that indentation style can't be auto detected if destination line has no indentation.
 ; In that case the indentation style of the source is retained.
+#IfWinActive ahk_class Notepad++
 <^>!v::
 Ralt & v::gosub superpaste
+#IfWinActive
 
 return ; --------------------------------------------------------------------------------
 ;

@@ -4,7 +4,7 @@ AutoHotkey scripts to increase productivity on Windows. See the scripts for deta
 
 ### winvi.ahk
 
-Vim inspired keybinds anywhere on Windows. 
+Vim inspired keybinds anywhere on Windows. Dodgier keybinds that are only tested to work with Notepad++ are context sensitive. 
 
 ### keymouse.ahk
 
