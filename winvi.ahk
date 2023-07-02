@@ -74,12 +74,12 @@ RAlt & Down::scroll("Down")
 
 ; Paste and match indentation
 ; If indentation style (tabs vs spaces) of source document doesn't match the style of
-; destination document then clipboard contents will be modified to match destination style.
-; Note that indentation style can't be auto detected if destination line has no indentation.
-; In that case the indentation style of the source is retained.
+; destination document then clipboard contents will be temporarily modified to match
+; destination style. Note that indentation style can't be auto detected if destination
+; line has no indentation. In that case the indentation style of the source is retained.
 #IfWinActive ahk_class Notepad++
-<^>!v::
-Ralt & v::gosub superpaste
+<^>!v UP::
+Ralt & v UP::gosub superpaste
 #IfWinActive
 
 return ; --------------------------------------------------------------------------------
