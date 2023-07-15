@@ -57,6 +57,9 @@ CapsLock & Right::gosub moveMouse
 CapsLock & Enter::Click
 CapsLock & BackSpace::Click, R
 
+CapsLock & PgUp::SendInput {WheelUp 3}
+CapsLock & PgDn::SendInput {WheelDown 3}
+
 ; Focus window under mouse cursor
 CapsLock & Space::gosub focusWindow
 
