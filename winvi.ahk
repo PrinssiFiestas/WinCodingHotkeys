@@ -40,6 +40,13 @@ Loop Parse, arrowList, " "
 § & a UP::
 ~Delete & a UP::
 ~Insert & a UP::highlightInner(true)
+
+; Copy or cut line
+; Press ^c or ^x twice
+~^~c UP::
+~>^~c UP::
+~^~x UP::
+~>^~x UP::gosub copy
 #IfWinActive
 
 ; Find character in line
@@ -48,11 +55,6 @@ Loop Parse, arrowList, " "
 ~Right & f UP::
 ~Left & t UP::
 ~Right & t UP::gosub findCharInLine
-
-; Copy or cut line
-; Press ^c or ^x twice
-~^~c UP::
-~^~x UP::gosub copy
 
 ; Highlight line
 ; Multiple lines can be highlighted by pressing number keys while holding Insert and arrow
@@ -93,12 +95,17 @@ return ; -----------------------------------------------------------------------
 #Persistent
 #Warn
 
-getHighlightedContents()
+getHighlightedContents(ctrlSide)
 {
 	clipboardStorage := ClipboardAll
 	Clipboard := ""
 	Sleep % highlightWaitTime
-	SendInput ^c
+	if (ctrlSide == "<" || ctrlSide = "Left")
+		SendInput {LControl DOWN}c{LControl UP}
+	else if (ctrlSide == ">" || ctrlSide = "Right")
+		SendInput {RControl DOWN}c{RControl UP}
+	else
+		SendInput ^c
 	ClipWait % clipWaitTime
 	contents := Clipboard
 	Clipboard := clipboardStorage
@@ -112,19 +119,19 @@ superpaste:
 	if (Clipboard == "")
 		return
 
-	currentHighlight := getHighlightedContents()
+	currentHighlight := getHighlightedContents("")
 	if (currentHighlight != "")
 		SendInput {Backspace}
 
 	; Highlight line beginning
 	SendInput +{Up}+{End}+{Right}
-	currentLine := getHighlightedContents()
+	currentLine := getHighlightedContents("")
 
 	; Try again if first line on Notepad.exe or empty line
 	if (currentLine == "")
 	{
 		SendInput +{Home}+{Home}
-		currentLine := getHighlightedContents()
+		currentLine := getHighlightedContents("")
 	}
 
 	; Get back to original cursor position
@@ -247,7 +254,7 @@ findCharInLine:
 	jumpBack  := direction == "Left" ? "Right" : "Left"
 
 	SendInput +{%jump%}
-	lineFromCursor := getHighlightedContents()
+	lineFromCursor := getHighlightedContents("")
 
 	if (lineFromCursor == "")
 	{
@@ -290,7 +297,7 @@ scroll(direction)
 _highlightLineUp()
 {
 	SendInput {End}+{Up}
-	lineContents := getHighlightedContents()
+	lineContents := getHighlightedContents("")
 	if (InStr(lineContents, "`n"))
 		SendInput +{End}
 	if (lineContents == "") ; try again with different method
@@ -354,7 +361,12 @@ copy:
 {
 	key := ""
 	followUpKeylist := "c x"
-	hotkeyChar := SubStr(A_ThisHotkey, 0, 1) ; x or c
+
+	ctrlSidePos := InStr(A_ThisHotkey, "<")
+	if ( ! ctrlSidePos)
+		ctrlSidePos := InStr(A_ThisHotkey, ">")
+
+	ctrlSide := ctrlSidePos ? SubStr(A_ThisHotkey, ctrlSidePos, 1) : ""
 
 	; Poll for follow-up key
 	while (GetKeyState("Ctrl"))
@@ -373,11 +385,11 @@ copy:
 	if (key == "c")
 	{
 		SendInput +{End}
-		lineEnd := getHighlightedContents()
+		lineEnd := getHighlightedContents(ctrlSide)
 		startingPosition := StrLen(lineEnd)
 
 		_highlightLine("Left")
-		line := getHighlightedContents()
+		line := getHighlightedContents(ctrlSide)
 		if (line != "")
 			Clipboard := line
 
@@ -388,11 +400,13 @@ copy:
 	else if (key == "x")
 	{
 		_highlightLine("Left")
-		line := getHighlightedContents()
+		line := getHighlightedContents(ctrlSide)
 		if (line != "")
 			Clipboard := line
 		SendInput {Delete}{Backspace}
 	}
+
+	Clipboard := LTrim(Clipboard)
 
 	return
 }
@@ -491,7 +505,7 @@ _highlightInner(isInclusive)
 	if (lPosition.row == 0 && rPosition.row > 0)
 	{
 		SendInput +{End}
-		lineTail := getHighlightedContents()
+		lineTail := getHighlightedContents("")
 		if (lineTail != "")
 		{
 			lOffset := lPosition.column
@@ -558,7 +572,7 @@ _getClipToAnalyze(ByRef direction, alreadyScanned)
 	verticalDirection := direction == "Left" ? "Up" : "Down"
 	Loop %rowsToAnalyze%
 		SendInput +{%verticalDirection%}
-	rows := getHighlightedContents()
+	rows := getHighlightedContents("")
 
 	if (rows == "" && alreadyScanned == 0) ; we're on 1st/last line on Notepad.exe
 	{
@@ -567,7 +581,7 @@ _getClipToAnalyze(ByRef direction, alreadyScanned)
 			SendInput +{Home}
 		else
 			SendInput +{End}
-		clip := getHighlightedContents()
+		clip := getHighlightedContents("")
 	}
 	else if (direction == "Left")
 		clip := SubStr(rows, 1, StrLen(rows) - alreadyScanned)
