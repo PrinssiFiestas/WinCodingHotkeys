@@ -262,13 +262,13 @@ findCharInLine:
 
 	SendInput +{%jump%}
 	lineFromCursor := getHighlightedContents("")
+	SendInput {%jumpBack% 2} ; get back to original cursor position
 
 	if (lineFromCursor == "")
 	{
 		MsgBox End of line or failure reading line!
 		return
 	}
-	SendInput {%jumpBack%} ; get back to original cursor position
 
 	Input char, L1
 	charPosition := InStr(lineFromCursor, char, true, direction == "Right" ? 1 : -1)
@@ -278,7 +278,6 @@ findCharInLine:
 	if (direction == "Left")
 		charPosition := StrLen(lineFromCursor) - charPosition + 1
 
-	SendInput {%jumpBack%} ; revert initial arrow press
 	; Highlight to found character
 	Loop % charPosition + (InStr(A_ThisHotkey, " f ") != 0)
 		SendInput +{%direction%}
