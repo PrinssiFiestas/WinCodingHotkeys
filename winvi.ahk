@@ -51,12 +51,16 @@ Loop Parse, arrowList, " "
 ~>^~x UP::gosub copy
 #IfWinActive
 
-; Find character in line
-; Wait for character input, find it in current line, highlight to it and move cursor to it
+; Find character
+; Wait for character input, find it, highlight to it, and move cursor to it
 ~Left & f UP::
 ~Right & f UP::
 ~Left & t UP::
 ~Right & t UP::gosub findCharInLine
+~Up & f UP::
+~Down & f::
+~Up & t UP::
+~Down & t UP::gosub findCharAboveOrBelow
 
 ; Highlight line
 ; Multiple lines can be highlighted by pressing number keys while holding Insert and arrow
@@ -285,6 +289,53 @@ findCharInLine:
 ; ---------------------------------------------------------------------------------------
 ; ---------------------------------------------------------------------------------------
 
+findCharAboveOrBelow:
+{
+	global lChar := ""
+	global rChar := ""
+
+	key := InStr(A_ThisHotkey, "Up", true) ? "Up" : "Down"
+	direction := key == "Up" ? "Left" : "Right"
+	if (direction == "Left")
+		SendInput {Down}
+	else
+		SendInput {Up}
+
+	Input char, L1
+	; Wait for intrusive modifiers to be lifted
+	while (GetKeyState("Ctrl") || GetKeyState("Alt") || GetKeyState("AltGr") || GetKeyState("Shift"))
+		Sleep 1
+	lChar := char
+	rChar := char
+	position := new Position
+	isInclusive := StrSplit(A_ThisHotkey, " ")[3] == "f"
+	position := _findMatching(direction, isInclusive)
+
+	if (position.row == 0)
+	{
+		if (direction == "Left")
+			SendInput {Right}
+		else
+			SendInput {Left}
+		Loop % position.column
+			SendInput +{%direction%}
+	}
+	else
+	{
+		opposite := key == "Up" ? "Down" : "Up"
+		Loop % 5 - Mod(position.row, 5) + (key == "Down")
+			SendInput +{%opposite%}
+		SendInput +{End}
+		Loop % position.column + (key == "Down")
+			SendInput +{%direction%}
+	}
+
+	return
+}
+
+; ---------------------------------------------------------------------------------------
+; ---------------------------------------------------------------------------------------
+
 scroll(direction)
 {
 	SendInput ^{%direction%}{%direction%}
@@ -433,6 +484,21 @@ class Position
 
 highlightInner(isInclusive)
 {
+	global lChar := ""
+	global rChar := ""
+	Input inputtedChar, L1
+
+	; Wait for intrusive modifiers to be lifted
+	while (GetKeyState("Ctrl") || GetKeyState("Alt") || GetKeyState("AltGr") || GetKeyState("Shift"))
+		Sleep 1
+
+	pairs := "()[]{}<>""""''"
+	charIndex := InStr(pairs, inputtedChar)
+	if (charIndex == 0)
+		return
+	lChar := SubStr(pairs, charIndex - !Mod(charIndex, 2), 1)
+	rChar := SubStr(pairs, charIndex +  Mod(charIndex, 2), 1)
+
 	positions := _highlightInner(isInclusive)
 
 	if (InStr(A_ThisHotkey, "Insert"))
@@ -446,22 +512,8 @@ highlightInner(isInclusive)
 
 _highlightInner(isInclusive)
 {
-	global lChar := ""
-	global rChar := ""
-	Input inputtedChar, L1
-
-	; Wait for intrusive modifiers to be lifted
-	while (GetKeyState("Ctrl") || GetKeyState("Alt") || GetKeyState("AltGr") || GetKeyState("Shift"))
-		Sleep 1
-
-	pairs := "()[]{}<>""""''" ; move to settings and add parity checking
-	charIndex := InStr(pairs, inputtedChar)
-	if (charIndex == 0)
-		return
-	lChar := SubStr(pairs, charIndex - !Mod(charIndex, 2), 1)
-	rChar := SubStr(pairs, charIndex +  Mod(charIndex, 2), 1)
-
-	; --------------------------------------------
+	global lChar
+	global rChar
 
 	lPosition := new Position
 	rPosition := new Position
@@ -649,4 +701,3 @@ _checkCounts(counts, ByRef direction)
 	else
 		return ""
 }
-
