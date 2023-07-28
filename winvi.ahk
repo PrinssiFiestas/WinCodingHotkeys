@@ -34,9 +34,11 @@ Loop Parse, arrowList, " "
 ; Delete inner or highlight inner
 ; Equivalent for Vim's "di". Only highlights with insert
 #IfWinActive ahk_class Notepad++
+å & i UP::
 § & i UP::
 ~Delete & i UP::
 ~Insert & i UP::highlightInner(false)
+å & a UP::
 § & a UP::
 ~Delete & a UP::
 ~Insert & a UP::highlightInner(true)
@@ -74,15 +76,16 @@ RAlt & Up::scroll("Up")
 <^>!Down::
 RAlt & Down::scroll("Down")
 
+; THIS HOTKEY BROKE RANDOMLY. Too bad, it was one of the most useful ones. RIP, at least for now...
 ; Paste and match indentation
 ; If indentation style (tabs vs spaces) of source document doesn't match the style of
 ; destination document then clipboard contents will be temporarily modified to match
 ; destination style. Note that indentation style can't be auto detected if destination
 ; line has no indentation. In that case the indentation style of the source is retained.
-#IfWinActive ahk_class Notepad++
-<^>!v UP::
-Ralt & v UP::gosub superpaste
-#IfWinActive
+;#IfWinActive ahk_class Notepad++
+;<^>!v UP::
+;Ralt & v UP::gosub superpaste
+;#IfWinActive
 
 return ; --------------------------------------------------------------------------------
 ;

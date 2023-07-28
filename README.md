@@ -1,6 +1,6 @@
 # WinCodingHotkeys
 
-AutoHotkey scripts to increase productivity on Windows. See the scripts for details. 
+AutoHotkey scripts to increase programming productivity on Windows. Made for Finnish keyboard layout and mostly tested with Notepad++, but should be easily modified for other layouts and text editors. See the scripts for details. 
 
 ### winvi.ahk
 
