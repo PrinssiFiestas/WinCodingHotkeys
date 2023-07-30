@@ -491,7 +491,7 @@ highlightInner(isInclusive)
 	while (GetKeyState("Ctrl") || GetKeyState("Alt") || GetKeyState("AltGr") || GetKeyState("Shift"))
 		Sleep 1
 
-	pairs := "()[]{}<>""""''  ,,..--__%%##||"
+	pairs := "()[]{}<>""""''  ,,..--__%%##||//**"
 	charIndex := InStr(pairs, inputtedChar)
 	if (charIndex == 0)
 		return
