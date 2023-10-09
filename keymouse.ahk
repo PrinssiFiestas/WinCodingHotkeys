@@ -1,5 +1,5 @@
 ﻿#NoEnv
-#Warn
+; #Warn
 #Persistent
 SetKeyDelay 100
 #SingleInstance, Force
@@ -47,6 +47,11 @@ Loop % n_rows
 scan_codes := "sc002 sc003 sc004 sc005 sc006 sc007 sc008 sc009 sc00A sc00B sc00C sc00D sc010 sc011 sc012 sc013 sc014 sc015 sc016 sc017 sc018 sc019 sc01A sc01B sc01E sc01F sc020 sc021 sc022 sc023 sc024 sc025 sc026 sc027 sc028 sc02B sc056 sc02C sc02D sc02E sc02F sc030 sc031 sc032 sc033 sc034 sc035 Rshift"
 Loop Parse, scan_codes, " "
     Hotkey CapsLock & %A_LoopField%, mouseJump
+
+; CapsLock & AnyNumpadNum::Focus window at physically matching numkey location
+num_keys := "Numpad1 Numpad2 Numpad3 Numpad4 Numpad5 Numpad6 Numpad7 Numpad8 Numpad9"
+Loop Parse, num_keys, " "
+    Hotkey CapsLock & %A_LoopField%, focusWindowAt
 
 ; Move mouse with arrows. Hold Shift for fine movement
 CapsLock & Up::
@@ -108,5 +113,17 @@ focusWindow:
 {
     MouseGetPos,,, hwnd
     WinActivate, ahk_id %hwnd%
+    return
+}
+
+focusWindowAt:
+{
+    x_coords := [ 1*A_ScreenWidth/4, 2*A_ScreenWidth/4, 3*A_ScreenWidth/4, 1*A_ScreenWidth/4, 2*A_ScreenWidth/4, 3*A_ScreenWidth/4, 1*A_ScreenWidth/4, 2*A_ScreenWidth/4, 3*A_ScreenWidth/4 ]
+    y_coords := [ 3*A_ScreenHeight/4, 3*A_ScreenHeight/4, 3*A_ScreenHeight/4, 2*A_ScreenHeight/4, 2*A_ScreenHeight/4, 2*A_ScreenHeight/4, 1*A_ScreenHeight/4, 1*A_ScreenHeight/4, 1*A_ScreenHeight/4 ]
+    MouseGetPos, x_mouseOld, y_mouseOld
+    index := SubStr(A_ThisHotkey, 0, 1)
+    MouseMove, x_coords[index], y_coords[index], 0
+    gosub focusWindow
+    MouseMove, x_mouseOld, y_mouseOld, 0
     return
 }
