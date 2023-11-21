@@ -65,7 +65,8 @@ CapsLock & BackSpace::Click, R
 CapsLock & PgUp::SendInput {WheelUp 3}
 CapsLock & PgDn::SendInput {WheelDown 3}
 
-; Focus window under mouse cursor
+; Focus window under mouse cursor. Useful for focusing to a text editor without moving cursor
+CapsLock & LButton::
 CapsLock & Space::gosub focusWindow
 
 return ; --------------------------------------------------------------------------------
